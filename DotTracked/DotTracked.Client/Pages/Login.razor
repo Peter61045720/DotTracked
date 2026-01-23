@@ -1,5 +1,6 @@
 ﻿@page "/login"
 @using System.ComponentModel.DataAnnotations
+@inject NavigationManager Navigation
 
 <PageTitle>Login</PageTitle>
 
@@ -48,17 +49,17 @@
     private void HandleLogin()
     {
         if (!_success)
-        {
             return;
-        }
 
         Console.WriteLine("Email: " + _email);
         Console.WriteLine("Password: " + _password);
+
+        Navigation.NavigateTo("");
     }
 
     private void NavigateToRegistration()
     {
-        Console.WriteLine("Registration button pressed");
+        Navigation.NavigateTo("register");
     }
 
 }

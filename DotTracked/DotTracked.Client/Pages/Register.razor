@@ -1,0 +1,134 @@
+﻿@page "/register"
+@using System.ComponentModel.DataAnnotations
+@using System.Text.RegularExpressions
+@inject NavigationManager Navigation
+
+<PageTitle>Register</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pt-16">
+    <MudCard Elevation="4">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h5" Align="Align.Center">Register</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+
+        <MudCardContent>
+            <MudForm @ref="_form" @bind-IsValid="@_success" @bind-Errors="@_errors">
+                <MudGrid Spacing="4">
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_email"
+                                      T="string"
+                                      Label="Email"
+                                      InputType="InputType.Email"
+                                      Validation="@(new EmailAddressAttribute { ErrorMessage = "The email address is invalid" })"
+                                      Required="true"
+                                      RequiredError="Email is required!"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_username"
+                                      T="string"
+                                      Label="Username"
+                                      InputType="InputType.Text"
+                                      Required="true"
+                                      RequiredError="Username is required!"/>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_firstname"
+                                      T="string"
+                                      Label="First Name"
+                                      InputType="InputType.Text"
+                                      Required="true"
+                                      RequiredError="First Name is required!"/>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_lastname"
+                                      T="string"
+                                      Label="Last Name"
+                                      InputType="InputType.Text"
+                                      Required="true"
+                                      RequiredError="Last Name is required!"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_password"
+                                      T="string"
+                                      Label="Password"
+                                      InputType="InputType.Password"
+                                      Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))"
+                                      Required="true"
+                                      RequiredError="Password is required!"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField T="string"
+                                      Label="Confirm Password"
+                                      InputType="InputType.Password"
+                                      Validation="@(new Func<string, string>(PasswordMatch))"
+                                      Required="true"
+                                      RequiredError="Password confirmation is required!"/>
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        </MudCardContent>
+
+        <MudCardActions Class="d-flex flex-column gap-4">
+            <MudButton OnClick="HandleRegister" Disabled="@(!_success)" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true">Register</MudButton>
+            <MudButton OnClick="NavigateToLogin" Variant="Variant.Text" Color="Color.Primary" FullWidth="true">Back to Login</MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private string _email;
+    private string _username;
+    private string _firstname;
+    private string _lastname;
+    private string _password;
+
+    private bool _success;
+    private string[] _errors = { };
+    private MudForm _form;
+
+    private IEnumerable<string> PasswordStrength(string password)
+    {
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            yield return "Password is required!";
+            yield break;
+        }
+
+        if (password.Length < 8)
+            yield return "Password must be at least of length 8";
+
+        if (!Regex.IsMatch(password, @"[A-Z]"))
+            yield return "Password must contain at least one capital letter";
+
+        if (!Regex.IsMatch(password, @"[a-z]"))
+            yield return "Password must contain at least one lowercase letter";
+
+        if (!Regex.IsMatch(password, @"[0-9]"))
+            yield return "Password must contain at least one digit";
+    }
+
+    private string PasswordMatch(string passwordArg)
+    {
+        return _password != passwordArg ? "Passwords don't match" : null;
+    }
+
+    private void HandleRegister()
+    {
+        if (!_success)
+            return;
+
+        Console.WriteLine("Email: " + _email);
+        Console.WriteLine("Username: " + _username);
+        Console.WriteLine("Firstname: " + _firstname);
+        Console.WriteLine("Lastname: " + _lastname);
+        Console.WriteLine("Password: " + _password);
+    }
+
+    private void NavigateToLogin()
+    {
+        Navigation.NavigateTo("login");
+    }
+
+}
