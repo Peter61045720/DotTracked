@@ -1,0 +1,145 @@
+﻿@page "/register"
+@using System.ComponentModel.DataAnnotations
+@using DotTracked.Data
+@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IUserStore<ApplicationUser> UserStore
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Register</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pt-16">
+    <MudCard Elevation="4">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h5" Align="Align.Center">Register</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+
+        <MudCardContent>
+            @if (_identityErrors != null)
+            {
+                <MudAlert Severity="Severity.Error">@Message</MudAlert>
+            }
+            <EditForm Model="Input" method="post" OnValidSubmit="RegisterUser" FormName="register">
+                <DataAnnotationsValidator/>
+
+                <MudGrid Spacing="4">
+                    <MudItem xs="12">
+                        <MudStaticTextField For="@(() => Input.Email)" @bind-Value="Input.Email"
+                                            Label="Email" InputType="InputType.Email"
+                                            UserAttributes="@(new Dictionary<string, object?> { { "autocomplete", "username" }, { "aria-required", "true" } })"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudStaticTextField For="@(() => Input.Username)" @bind-Value="Input.Username"
+                                            Label="Username" InputType="InputType.Text"
+                                            UserAttributes="@(new Dictionary<string, object?> { { "aria-required", "true" } })"/>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudStaticTextField For="@(() => Input.Firstname)" @bind-Value="Input.Firstname"
+                                            Label="First Name" InputType="InputType.Text"
+                                            UserAttributes="@(new Dictionary<string, object?> { { "aria-required", "true" } })"/>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudStaticTextField For="@(() => Input.Lastname)" @bind-Value="Input.Lastname"
+                                            Label="Last Name" InputType="InputType.Text"
+                                            UserAttributes="@(new Dictionary<string, object?> { { "aria-required", "true" } })"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudStaticTextField For="@(() => Input.Password)" @bind-Value="Input.Password"
+                                            Label="Password" InputType="InputType.Password"
+                                            UserAttributes="@(new Dictionary<string, object?> { { "autocomplete", "new-password" }, { "aria-required", "true" } })"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudStaticTextField For="@(() => Input.ConfirmPassword)" @bind-Value="Input.ConfirmPassword"
+                                            Label="Confirm Password" InputType="InputType.Password"
+                                            UserAttributes="@(new Dictionary<string, object?> { { "autocomplete", "new-password" }, { "aria-required", "true" } })"/>
+
+                    </MudItem>
+                </MudGrid>
+                <MudStaticButton FormAction="FormAction.Submit" Class="mt-6" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true">Register</MudStaticButton>
+            </EditForm>
+        </MudCardContent>
+
+        <MudCardActions>
+            <MudButton Href="login" Variant="Variant.Text" Color="Color.Primary" FullWidth="true">Back to Login</MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private IEnumerable<IdentityError>? _identityErrors;
+
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
+
+    public async Task RegisterUser(EditContext editContext)
+    {
+        var user = CreateUser();
+
+        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
+        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+        user.FirstName = Input.Firstname;
+        user.LastName = Input.Lastname;
+
+        var result = await UserManager.CreateAsync(user, Input.Password);
+
+        if (!result.Succeeded)
+        {
+            _identityErrors = result.Errors;
+            return;
+        }
+
+        await SignInManager.SignInAsync(user, false);
+        RedirectManager.RedirectTo("home");
+    }
+
+    private static ApplicationUser CreateUser()
+    {
+        try
+        {
+            return Activator.CreateInstance<ApplicationUser>();
+        }
+        catch
+        {
+            throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
+                                                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        [Required]
+        public string Username { get; set; }
+
+        [Required]
+        public string Firstname { get; set; }
+
+        [Required]
+        public string Lastname { get; set; }
+
+        [Required]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
+
+        [DataType(DataType.Password)]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; }
+    }
+
+}
