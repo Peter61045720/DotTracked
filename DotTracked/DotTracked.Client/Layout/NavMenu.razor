@@ -3,7 +3,7 @@
 
 <MudNavMenu>
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-    <form action="logout" method="post">
+    <form action="Account/Logout" method="post">
         <AntiforgeryToken/>
         <input type="hidden" name="ReturnUrl" value="@_currentUrl"/>
         <button type="submit" class="mud-nav-link mud-ripple">

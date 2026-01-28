@@ -1,4 +1,4 @@
-﻿@page "/login"
+﻿@page "/Account/Login"
 @using System.ComponentModel.DataAnnotations
 @using DotTracked.Data
 @using Microsoft.AspNetCore.Authentication
@@ -9,7 +9,7 @@
 
 <PageTitle>Login</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Medium" Class="pt-16">
+<MudContainer MaxWidth="MaxWidth.Small" Class="pt-16">
     <MudCard Elevation="4">
         <MudCardHeader>
             <CardHeaderContent>
@@ -18,7 +18,7 @@
         </MudCardHeader>
 
         <MudCardContent>
-            @if (string.IsNullOrEmpty(_errorMessage))
+            @if (!string.IsNullOrEmpty(_errorMessage))
             {
                 <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
             }
@@ -42,7 +42,7 @@
         </MudCardContent>
 
         <MudCardActions>
-            <MudButton href="register" Variant="Variant.Text" Color="Color.Primary" FullWidth="true">Register</MudButton>
+            <MudButton href="Account/Register" Variant="Variant.Text" Color="Color.Primary" FullWidth="true">Register</MudButton>
         </MudCardActions>
     </MudCard>
 </MudContainer>

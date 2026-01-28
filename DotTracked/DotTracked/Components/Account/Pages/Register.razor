@@ -1,4 +1,4 @@
-﻿@page "/register"
+﻿@page "/Account/Register"
 @using System.ComponentModel.DataAnnotations
 @using DotTracked.Data
 @using Microsoft.AspNetCore.Identity
@@ -33,17 +33,17 @@
                                             UserAttributes="@(new Dictionary<string, object?> { { "autocomplete", "username" }, { "aria-required", "true" } })"/>
                     </MudItem>
                     <MudItem xs="12">
-                        <MudStaticTextField For="@(() => Input.Username)" @bind-Value="Input.Username"
-                                            Label="Username" InputType="InputType.Text"
+                        <MudStaticTextField For="@(() => Input.DisplayName)" @bind-Value="Input.DisplayName"
+                                            Label="Display Name" InputType="InputType.Text"
                                             UserAttributes="@(new Dictionary<string, object?> { { "aria-required", "true" } })"/>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudStaticTextField For="@(() => Input.Firstname)" @bind-Value="Input.Firstname"
+                        <MudStaticTextField For="@(() => Input.FirstName)" @bind-Value="Input.FirstName"
                                             Label="First Name" InputType="InputType.Text"
                                             UserAttributes="@(new Dictionary<string, object?> { { "aria-required", "true" } })"/>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudStaticTextField For="@(() => Input.Lastname)" @bind-Value="Input.Lastname"
+                        <MudStaticTextField For="@(() => Input.LastName)" @bind-Value="Input.LastName"
                                             Label="Last Name" InputType="InputType.Text"
                                             UserAttributes="@(new Dictionary<string, object?> { { "aria-required", "true" } })"/>
                     </MudItem>
@@ -64,7 +64,7 @@
         </MudCardContent>
 
         <MudCardActions>
-            <MudButton Href="login" Variant="Variant.Text" Color="Color.Primary" FullWidth="true">Back to Login</MudButton>
+            <MudButton Href="Account/Login" Variant="Variant.Text" Color="Color.Primary" FullWidth="true">Back to Login</MudButton>
         </MudCardActions>
     </MudCard>
 </MudContainer>
@@ -89,8 +89,13 @@
         var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
 
-        user.FirstName = Input.Firstname;
-        user.LastName = Input.Lastname;
+        user.DisplayName = Input.DisplayName;
+        user.FirstName = Input.FirstName;
+        user.LastName = Input.LastName;
+
+        var currentTime = DateTime.UtcNow;
+        user.CreatedAt = currentTime;
+        user.UpdatedAt = currentTime;
 
         var result = await UserManager.CreateAsync(user, Input.Password);
 
@@ -124,16 +129,17 @@
         public string Email { get; set; }
 
         [Required]
-        public string Username { get; set; }
+        [MaxLength(50)]
+        public string DisplayName { get; set; }
 
         [Required]
-        public string Firstname { get; set; }
+        public string FirstName { get; set; }
 
         [Required]
-        public string Lastname { get; set; }
+        public string LastName { get; set; }
 
         [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [StringLength(50, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 8)]
         [DataType(DataType.Password)]
         public string Password { get; set; }
 

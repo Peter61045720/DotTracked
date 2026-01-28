@@ -11,7 +11,9 @@ internal static class IdentityComponentsEndpointRouteBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(endpoints);
 
-        return endpoints.MapPost("/logout", async (
+        var accountGroup = endpoints.MapGroup("/Account");
+
+        accountGroup.MapPost("/Logout", async (
             ClaimsPrincipal user,
             [FromServices] SignInManager<ApplicationUser> signInManager,
             [FromForm] string returnUrl) =>
@@ -19,5 +21,7 @@ internal static class IdentityComponentsEndpointRouteBuilderExtensions
             await signInManager.SignOutAsync();
             return TypedResults.LocalRedirect($"~/{returnUrl}");
         });
+
+        return accountGroup;
     }
 }
