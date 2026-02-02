@@ -15,4 +15,8 @@
     <PackageReference Include="MudBlazor" Version="8.*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\DotTracked.Shared\DotTracked.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,105 @@
+﻿@page "/profile"
+@using DotTracked.Client.Components.Dialogs
+@using DotTracked.Shared.DTOs
+
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="pt-16">
+    <MudCard Elevation="4">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h5" Align="Align.Center">Profile</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+
+        <MudCardContent>
+            @if (_user == null)
+            {
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+            }
+            else
+            {
+                <MudStack Spacing="4">
+                    <MudTextField @bind-Value="_user.Email" Label="Email" Disabled="true"/>
+                    <MudTextField @bind-Value="_user.DisplayName" Label="Display Name"/>
+                    <MudTextField @bind-Value="_user.FirstName" Label="First Name"/>
+                    <MudTextField @bind-Value="_user.LastName" Label="Last Name"/>
+                </MudStack>
+            }
+        </MudCardContent>
+
+        <MudCardActions>
+            <MudButton OnClick="UpdateUserAsync" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true">Update</MudButton>
+        </MudCardActions>
+    </MudCard>
+
+    <MudPaper Class="mt-8" Elevation="4">
+        <MudText Class="pa-4" Typo="Typo.h5">Manage</MudText>
+        <MudTooltip Text="The account cannot be restored after deletion" Arrow="true" Placement="Placement.Right">
+            <MudButton OnClick="DeleteUserAsync" Class="pa-4" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error">Delete Account</MudButton>
+        </MudTooltip>
+    </MudPaper>
+</MudContainer>
+
+@code
+{
+    private UserDto? _user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _user = await Http.GetFromJsonAsync<UserDto>("api/user/details");
+        }
+        catch (Exception exception)
+        {
+            Snackbar.Add("Error loading data: " + exception.Message, Severity.Error);
+        }
+    }
+
+    private async Task UpdateUserAsync()
+    {
+        var response = await Http.PutAsJsonAsync("api/user", _user);
+
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Profile updated successfully", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("An error occured while saving: ", Severity.Error);
+        }
+    }
+
+    private async Task DeleteUserAsync()
+    {
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+        var dialog = await DialogService.ShowAsync<DeleteAccountDialog>("Delete account", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is PasswordDto passwordDto)
+        {
+            var response = await Http.PostAsJsonAsync("api/user/delete-account", passwordDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Account deleted successfully", Severity.Success);
+                Navigation.NavigateTo("Account/Login", true);
+            }
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                Snackbar.Add("An error occured while deleting account: " + errorMessage, Severity.Error);
+            }
+        }
+    }
+}

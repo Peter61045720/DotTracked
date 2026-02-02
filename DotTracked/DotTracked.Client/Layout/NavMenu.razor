@@ -1,5 +1,6 @@
 ﻿<MudNavMenu>
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+    <MudNavLink Href="profile" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AccountCircle">Profile</MudNavLink>
     <form action="Account/Logout" method="post">
         <AntiforgeryToken/>
         <button type="submit" class="mud-nav-link mud-ripple">

@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\DotTracked.ServiceDefaults\DotTracked.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\DotTracked.Shared\DotTracked.Shared.csproj" />
     <ProjectReference Include="..\DotTracked.Client\DotTracked.Client.csproj" />
     <PackageReference Include="Extensions.MudBlazor.StaticInput" Version="3.2.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.*" />

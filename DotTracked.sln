@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotTracked.AppHost", "DotTr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotTracked.ServiceDefaults", "DotTracked.ServiceDefaults\DotTracked.ServiceDefaults.csproj", "{90AF5024-4562-5D71-BB18-FDC342210769}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotTracked.Shared", "DotTracked.Shared\DotTracked.Shared.csproj", "{1022A953-94C6-4D7A-A6D0-28CA723B94D9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{90AF5024-4562-5D71-BB18-FDC342210769}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90AF5024-4562-5D71-BB18-FDC342210769}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90AF5024-4562-5D71-BB18-FDC342210769}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1022A953-94C6-4D7A-A6D0-28CA723B94D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1022A953-94C6-4D7A-A6D0-28CA723B94D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1022A953-94C6-4D7A-A6D0-28CA723B94D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1022A953-94C6-4D7A-A6D0-28CA723B94D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

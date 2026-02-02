@@ -1,6 +1,7 @@
 using DotTracked.Components;
 using DotTracked.Components.Account;
 using DotTracked.Data;
+using DotTracked.Endpoints;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
@@ -70,6 +71,7 @@ public class Program
             .AddAdditionalAssemblies(typeof(_Imports).Assembly);
 
         app.MapAdditionalIdentityEndpoints();
+        app.MapUserEndpoints();
 
         app.Run();
     }

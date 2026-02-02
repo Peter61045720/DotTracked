@@ -1,0 +1,37 @@
+﻿@using DotTracked.Shared.DTOs
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Delete account</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudText Typo="Typo.body1" Class="mb-4">Are you sure you want to delete your account? This process cannot be undone.</MudText>
+        <MudTextField @bind-Value="_passwordDto.Password" Label="Your Password" InputType="InputType.Password" Immediate="true"/>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" OnClick="DeleteAccount" Disabled="@(string.IsNullOrWhiteSpace(_passwordDto.Password))">Delete Account</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    private readonly PasswordDto _passwordDto = new();
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void DeleteAccount()
+    {
+        MudDialog.Close(DialogResult.Ok(_passwordDto));
+    }
+
+}
