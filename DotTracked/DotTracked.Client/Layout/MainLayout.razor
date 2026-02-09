@@ -4,19 +4,13 @@
 <MudPopoverProvider/>
 <MudDialogProvider/>
 <MudSnackbarProvider/>
+
 <MudLayout>
     <AuthorizeView>
         <Authorized>
-            <MudAppBar Elevation="1">
-                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(e => DrawerToggle())"/>
-                <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
-                <MudSpacer/>
-                <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle"/>
-                <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End"/>
+            <MudAppBar>
+                <NavMenu IsDarkMode="_isDarkMode" DarkLightModeButtonIcon="@DarkLightModeButtonIcon" OnDarkModeToggle="DarkModeToggle"/>
             </MudAppBar>
-            <MudDrawer id="nav-drawer" @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
-                <NavMenu/>
-            </MudDrawer>
             <MudMainContent Class="pt-16 pa-4">
                 @Body
             </MudMainContent>
@@ -36,7 +30,6 @@
 </div>
 
 @code {
-    private bool _drawerOpen = true;
     private bool _isDarkMode;
     private MudTheme? _theme;
 
@@ -52,11 +45,6 @@
         };
     }
 
-    private void DrawerToggle()
-    {
-        _drawerOpen = !_drawerOpen;
-    }
-
     private void DarkModeToggle()
     {
         _isDarkMode = !_isDarkMode;
@@ -64,31 +52,29 @@
 
     private readonly PaletteLight _lightPalette = new()
     {
+        Primary = "#2196F3",
+        Background = "#f2f2f2",
         Black = "#110e2d",
         AppbarText = "#424242",
         AppbarBackground = "rgba(255,255,255,0.8)",
-        DrawerBackground = "#ffffff",
         GrayLight = "#e8e8e8",
         GrayLighter = "#f9f9f9"
     };
 
     private readonly PaletteDark _darkPalette = new()
     {
-        Primary = "#7e6fff",
-        Surface = "#1e1e2d",
-        Background = "#1a1a27",
+        Primary = "#2196F3",
+        Surface = "#1e1e1e",
+        Background = "#121212",
         BackgroundGray = "#151521",
-        AppbarText = "#92929f",
-        AppbarBackground = "rgba(26,26,39,0.8)",
-        DrawerBackground = "#1a1a27",
-        ActionDefault = "#74718e",
+        AppbarText = "#929292",
+        AppbarBackground = "rgba(26,26,26,0.8)",
+        ActionDefault = "#747474",
         ActionDisabled = "#9999994d",
         ActionDisabledBackground = "#605f6d4d",
-        TextPrimary = "#b2b0bf",
-        TextSecondary = "#92929f",
-        TextDisabled = "#ffffff33",
-        DrawerIcon = "#92929f",
-        DrawerText = "#92929f",
+        TextPrimary = "#b2b2b2",
+        TextSecondary = "#929292",
+        TextDisabled = "#ffffff44",
         GrayLight = "#2a2833",
         GrayLighter = "#1e1e2d",
         Info = "#4a86ff",
@@ -97,13 +83,13 @@
         Error = "#ff3f5f",
         LinesDefault = "#33323e",
         TableLines = "#33323e",
-        Divider = "#292838",
+        Divider = "#b2b2b2",
         OverlayLight = "#1e1e2d80"
     };
 
     public string DarkLightModeButtonIcon => _isDarkMode switch
     {
-        true => Icons.Material.Rounded.AutoMode,
+        true => Icons.Material.Rounded.LightMode,
         false => Icons.Material.Outlined.DarkMode
     };
 

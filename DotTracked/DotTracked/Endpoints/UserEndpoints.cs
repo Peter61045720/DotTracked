@@ -48,6 +48,7 @@ public static class UserEndpoints
                 appUser.DisplayName = userDto.DisplayName;
                 appUser.FirstName = userDto.FirstName;
                 appUser.LastName = userDto.LastName;
+                appUser.UpdatedAt = DateTime.UtcNow;
 
                 var result = await userManager.UpdateAsync(appUser);
 

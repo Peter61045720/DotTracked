@@ -1,10 +1,57 @@
-﻿<MudNavMenu>
-    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-    <MudNavLink Href="profile" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AccountCircle">Profile</MudNavLink>
-    <form action="Account/Logout" method="post">
-        <AntiforgeryToken/>
-        <button type="submit" class="mud-nav-link mud-ripple">
-            <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Info" Class="mr-3"></MudIcon> Logout
-        </button>
-    </form>
-</MudNavMenu>
+﻿@inject NavigationManager Navigation
+
+<MudLink Href="/" Class="mt-2">
+    <MudImage Src="@(IsDarkMode ? "images/logo-dark.svg" : "images/logo-light.svg")" Alt="Logo" Height="24"></MudImage>
+</MudLink>
+
+<AuthorizeView>
+    <MudSpacer/>
+
+    <MudButton Href="/" Variant="Variant.Text" Class="@GetActiveClass("")">Home</MudButton>
+
+    <MudSpacer/>
+
+    <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@OnDarkModeToggle"/>
+
+    <MudMenu Icon="@Icons.Material.Filled.AccountCircle" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+        <MudMenuItem Disabled="true" Icon="@Icons.Material.Filled.Key">Logged in as: @context.User.Identity?.Name</MudMenuItem>
+
+        <MudDivider/>
+
+        <MudMenuItem Href="profile" Icon="@Icons.Material.Filled.ManageAccounts" Label="Manage Account"/>
+        <form action="Account/Logout" method="post">
+            <AntiforgeryToken/>
+            <button id="logout-button" type="submit">
+                <MudMenuItem Icon="@Icons.Material.Filled.Logout" Label="Logout"/>
+            </button>
+        </form>
+    </MudMenu>
+</AuthorizeView>
+
+<style>
+    #logout-button { width: 100%; }
+
+    .active-button {
+        text-decoration: underline 2px;
+        text-underline-offset: 8px;
+    }
+</style>
+
+@code {
+
+    [Parameter]
+    public bool IsDarkMode { get; set; }
+
+    [Parameter]
+    public string DarkLightModeButtonIcon { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnDarkModeToggle { get; set; }
+
+    private string GetActiveClass(string uri)
+    {
+        var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri).ToLower();
+        return relativePath == uri.ToLower() ? "mud-primary-text active-button mx-2" : "mx-2";
+    }
+
+}
