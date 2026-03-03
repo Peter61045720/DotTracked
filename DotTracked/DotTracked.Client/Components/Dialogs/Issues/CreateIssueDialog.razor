@@ -1,0 +1,70 @@
+﻿@using DotTracked.Shared.DTOs
+@using DotTracked.Shared.Enums
+@inject ISnackbar Snackbar
+
+<EditForm Model="@_issueDto" OnValidSubmit="CreateIssue">
+    <DataAnnotationsValidator/>
+
+    <MudDialog>
+        <TitleContent>
+            <MudText Typo="Typo.h6">Add Issue</MudText>
+        </TitleContent>
+
+        <DialogContent>
+
+            <MudTextField @bind-Value="_issueDto.Title" For="@(() => _issueDto.Title)"
+                          Label="Title" Immediate="true"/>
+
+            <MudTextField @bind-Value="_issueDto.Description" For="@(() => _issueDto.Description)"
+                          Label="Description" Lines="6" Immediate="true"/>
+
+            <MudSelect @bind-Value="_issueDto.Priority" Label="Priority">
+                @foreach (var priority in Enum.GetValues<Priority>())
+                {
+                    <MudSelectItem Value="@priority">@priority.ToString()</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudSelect @bind-Value="_issueDto.Status" Label="Status">
+                @foreach (var status in Enum.GetValues<Status>())
+                {
+                    <MudSelectItem Value="@status">@status.ToString()</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudDatePicker @bind-Date="PickerDate" Label="Due Date" ShowToolbar="false"/>
+
+        </DialogContent>
+
+        <DialogActions>
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled">Create</MudButton>
+        </DialogActions>
+
+    </MudDialog>
+</EditForm>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    private readonly IssueDto _issueDto = new() { DueDate = DateTime.UtcNow };
+
+    private DateTime? PickerDate
+    {
+        get => _issueDto.DueDate;
+        set => _issueDto.DueDate = value ?? DateTime.UtcNow;
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void CreateIssue()
+    {
+        MudDialog.Close(DialogResult.Ok(_issueDto));
+    }
+
+}

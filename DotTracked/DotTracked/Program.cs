@@ -38,7 +38,8 @@ public class Program
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
                                throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-        builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+        builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseSqlServer(connectionString, providerOptions => providerOptions.EnableRetryOnFailure()));
 
         builder.Services.AddIdentityCore<ApplicationUser>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -72,6 +73,7 @@ public class Program
 
         app.MapAdditionalIdentityEndpoints();
         app.MapUserEndpoints();
+        app.MapIssueEndpoints();
 
         app.Run();
     }

@@ -1,0 +1,103 @@
+﻿@page "/issues/{id:guid}"
+@using DotTracked.Client.Services
+@using DotTracked.Shared.DTOs
+@using DotTracked.Shared.Enums
+
+@inject NavigationManager Navigation
+@inject IIssueService IssueService
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    @if (_issueDto == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+    }
+    else
+    {
+        <MudText Typo="Typo.h5" Class="mb-6">Issue Details</MudText>
+
+        <MudPaper>
+            <MudButton OnClick="NavigateBack" StartIcon="@Icons.Material.Filled.ChevronLeft" Color="Color.Primary" Class="pa-4">Back to list</MudButton>
+
+            <MudGrid Spacing="6" Class="pa-4">
+                <MudItem xs="6">
+                    <MudText>Title:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    @_issueDto.Title
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText>Description:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    @_issueDto.Description
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText>Priority:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudChip T="string" Color="GetPriorityColor(_issueDto.Priority)" Class="ml-n3">
+                        @_issueDto.Priority.ToString()
+                    </MudChip>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText>Status:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudChip T="string" Color="GetStatusColor(_issueDto.Status)" Class="ml-n3">
+                        @_issueDto.Status.ToString()
+                    </MudChip>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText>Due Date:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    @_issueDto.DueDate
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private IssueDto? _issueDto;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _issueDto = await IssueService.GetIssueByIdAsync(Id);
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("issues");
+    }
+
+    private static Color GetPriorityColor(Priority priority)
+    {
+        return priority switch
+        {
+            Priority.High => Color.Error,
+            Priority.Medium => Color.Warning,
+            _ => Color.Default
+        };
+    }
+
+    private static Color GetStatusColor(Status status)
+    {
+        return status switch
+        {
+            Status.InProgress => Color.Primary,
+            Status.Done => Color.Success,
+            Status.DidNotComplete => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+}

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using DotTracked.Data.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace DotTracked.Data;
 
@@ -9,4 +10,6 @@ public class ApplicationUser : IdentityUser
     public string LastName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    public ICollection<Issue> Issues { get; } = new List<Issue>();
 }

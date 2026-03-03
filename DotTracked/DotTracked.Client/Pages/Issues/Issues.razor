@@ -1,0 +1,135 @@
+﻿@page "/issues"
+@using DotTracked.Client.Components.Dialogs
+@using DotTracked.Client.Components.Dialogs.Issues
+@using DotTracked.Client.Services
+@using DotTracked.Shared.DTOs
+
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IIssueService IssueService
+@inject IDialogService DialogService
+
+<MudContainer Class="mt-8">
+    @if (_issues == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+    }
+    else if (_issues.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">No issues available</MudAlert>
+    }
+    else
+    {
+        <MudDataGrid T="IssueDto" Items="@_issues" Hover="true" Striped="true" RowClick="@(row => GoToIssue(row.Item.Id))" RowStyle="cursor: pointer;">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Issues</MudText>
+                <MudSpacer/>
+                <MudButton OnClick="CreateIssueAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary">Add Issue</MudButton>
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="i => i.Title" Title="Title"/>
+                <PropertyColumn Property="i => i.Description" Title="Description"/>
+                <PropertyColumn Property="i => i.Priority.ToString()" Title="Priority"/>
+                <PropertyColumn Property="i => i.Status.ToString()" Title="Status"/>
+                <PropertyColumn Property="i => i.DueDate" Title="Due Date"/>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudStack Row>
+                            <MudIconButton OnClick="@(() => UpdateIssueAsync(context.Item))" Icon="@Icons.Material.Outlined.Edit"/>
+                            <MudIconButton OnClick="@(() => DeleteIssueAsync(context.Item))" Icon="@Icons.Material.Outlined.Delete" Color="Color.Error"/>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    }
+
+</MudContainer>
+
+@code {
+    private List<IssueDto>? _issues;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _issues = await IssueService.GetIssuesAsync();
+    }
+
+    public void GoToIssue(Guid id)
+    {
+        Navigation.NavigateTo($"issues/{id}");
+    }
+
+    public async Task CreateIssueAsync()
+    {
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<CreateIssueDialog>("Create Issue", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is IssueDto newIssueDto)
+        {
+            newIssueDto = await IssueService.CreateIssueAsync(newIssueDto);
+            _issues?.Add(newIssueDto);
+            Snackbar.Add("Issue created successfully", Severity.Success);
+        }
+    }
+
+    public async Task UpdateIssueAsync(IssueDto issueDto)
+    {
+        var parameters = new DialogParameters<UpdateIssueDialog>
+        {
+            { x => x.IssueDto, issueDto }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<UpdateIssueDialog>("Update Issue", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is IssueDto updatedIssue)
+        {
+            await IssueService.UpdateIssueAsync(updatedIssue.Id, updatedIssue);
+            Snackbar.Add("Issue updated successfully", Severity.Success);
+        }
+    }
+
+    public async Task DeleteIssueAsync(IssueDto issueDto)
+    {
+        var parameters = new DialogParameters<ConfirmDeleteDialog>
+        {
+            { x => x.ItemType, "Issue" },
+            { x => x.ItemName, issueDto.Title }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Delete Issue", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await IssueService.DeleteIssueAsync(issueDto.Id);
+            _issues?.Remove(issueDto);
+            Snackbar.Add("Issue deleted successfully", Severity.Success);
+        }
+    }
+
+}

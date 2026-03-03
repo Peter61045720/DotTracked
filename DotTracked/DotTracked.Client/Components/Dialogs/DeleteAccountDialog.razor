@@ -13,7 +13,7 @@
 
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Error" OnClick="DeleteAccount" Disabled="@(string.IsNullOrWhiteSpace(_passwordDto.Password))">Delete Account</MudButton>
+        <MudButton OnClick="DeleteAccount" Color="Color.Error" Disabled="@(string.IsNullOrWhiteSpace(_passwordDto.Password))">Delete Account</MudButton>
     </DialogActions>
 </MudDialog>
 
