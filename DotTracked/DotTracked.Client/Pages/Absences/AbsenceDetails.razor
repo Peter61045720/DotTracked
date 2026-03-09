@@ -1,0 +1,83 @@
+﻿@page "/absences/{id:guid}"
+@using DotTracked.Client.Services
+@using DotTracked.Shared.DTOs
+@using DotTracked.Shared.Enums
+
+@inject NavigationManager Navigation
+@inject IAbsenceService AbsenceService
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    @if (_absenceDto == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+    }
+    else
+    {
+        <MudText Typo="Typo.h5" Class="mb-6">Absence Details</MudText>
+
+        <MudPaper>
+            <MudButton OnClick="NavigateBack" StartIcon="@Icons.Material.Filled.ChevronLeft" Color="Color.Primary" Class="pa-4">Back to list</MudButton>
+
+            <MudGrid Spacing="6" Class="pa-4">
+                <MudItem xs="6">
+                    <MudText>Type:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudChip T="string" Color="GetTypeColor(_absenceDto.Type)" Class="ml-n3">
+                        @_absenceDto.Type.ToString()
+                    </MudChip>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText>Description:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    @_absenceDto.Description
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText>Start Date:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    @_absenceDto.StartDate.Date
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText>End Date:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    @_absenceDto.EndDate.Date
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private AbsenceDto? _absenceDto;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _absenceDto = await AbsenceService.GetAbsenceById(Id);
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("absences");
+    }
+
+    private static Color GetTypeColor(AbsenceType absenceType)
+    {
+        return absenceType switch
+        {
+            AbsenceType.Vacation => Color.Primary,
+            AbsenceType.SickDay => Color.Warning,
+            _ => Color.Default
+        };
+    }
+
+}

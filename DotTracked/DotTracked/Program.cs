@@ -74,6 +74,7 @@ public class Program
         app.MapAdditionalIdentityEndpoints();
         app.MapUserEndpoints();
         app.MapIssueEndpoints();
+        app.MapAbsenceEndpoints();
 
         app.Run();
     }

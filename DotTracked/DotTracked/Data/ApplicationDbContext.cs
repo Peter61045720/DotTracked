@@ -8,6 +8,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     : IdentityDbContext<ApplicationUser>(options)
 {
     public DbSet<Issue> Issues { get; set; }
+    public DbSet<Absence> Absences { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -19,6 +20,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(i => i.Creator)
             .WithMany(u => u.Issues)
             .HasForeignKey(i => i.CreatorId)
+            .IsRequired();
+
+        modelBuilder.Entity<Absence>().Property(a => a.Description).HasMaxLength(200);
+        modelBuilder.Entity<Absence>()
+            .HasOne(a => a.User)
+            .WithMany(u => u.Absences)
+            .HasForeignKey(a => a.UserId)
             .IsRequired();
     }
 }

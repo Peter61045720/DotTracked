@@ -1,0 +1,134 @@
+﻿@page "/absences"
+@using DotTracked.Client.Components.Dialogs
+@using DotTracked.Client.Components.Dialogs.Absences
+@using DotTracked.Client.Services
+@using DotTracked.Shared.DTOs
+
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IAbsenceService AbsenceService
+@inject IDialogService DialogService
+
+<MudContainer Class="mt-8">
+    @if (_absences == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+    }
+    else if (_absences.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">No absences available</MudAlert>
+        <MudButton OnClick="CreateAbsenceAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Class="mt-4">Add Absence</MudButton>
+    }
+    else
+    {
+        <MudDataGrid T="AbsenceDto" Items="_absences" Hover="true" Striped="true" RowClick="@(row => GoToAbsence(row.Item.Id))" RowStyle="cursor: pointer;">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Absences</MudText>
+                <MudSpacer/>
+                <MudButton OnClick="CreateAbsenceAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary">Add Absence</MudButton>
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="a => a.Type.ToString()" Title="Type"/>
+                <PropertyColumn Property="a => a.Description" Title="Description"/>
+                <PropertyColumn Property="a => a.StartDate.Date" Title="Start Date"/>
+                <PropertyColumn Property="a => a.EndDate.Date" Title="End Date"/>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudStack Row>
+                            <MudIconButton OnClick="@(() => UpdateAbsenceAsync(context.Item))" Icon="@Icons.Material.Outlined.Edit"/>
+                            <MudIconButton OnClick="@(() => DeleteAbsenceAsync(context.Item))" Icon="@Icons.Material.Outlined.Delete" Color="Color.Error"/>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    }
+</MudContainer>
+
+@code {
+    private List<AbsenceDto>? _absences;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _absences = await AbsenceService.GetAbsencesAsync();
+    }
+
+    public void GoToAbsence(Guid id)
+    {
+        Navigation.NavigateTo($"absences/{id}");
+    }
+
+    public async Task CreateAbsenceAsync()
+    {
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<CreateAbsenceDialog>("Create Absence", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is AbsenceDto newAbsenceDto)
+        {
+            newAbsenceDto = await AbsenceService.CreateAbsenceAsync(newAbsenceDto);
+            _absences?.Add(newAbsenceDto);
+            Snackbar.Add("Absence created successfully", Severity.Success);
+        }
+    }
+
+    public async Task UpdateAbsenceAsync(AbsenceDto absenceDto)
+    {
+        var parameters = new DialogParameters<UpdateAbsenceDialog>
+        {
+            { x => x.AbsenceDto, absenceDto }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<UpdateAbsenceDialog>("Update Absence", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is AbsenceDto updatedAbsenceDto)
+        {
+            await AbsenceService.UpdateAbsenceAsync(updatedAbsenceDto.Id, updatedAbsenceDto);
+            Snackbar.Add("Absence updated successfully", Severity.Success);
+        }
+    }
+
+    public async Task DeleteAbsenceAsync(AbsenceDto absenceDto)
+    {
+        var parameters = new DialogParameters<ConfirmDeleteDialog>
+        {
+            { x => x.ItemType, "Absence" },
+            { x => x.ItemName, $"Absence from {absenceDto.StartDate.Date} to {absenceDto.EndDate.Date}" }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Delete Absence", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await AbsenceService.DeleteAbsenceAsync(absenceDto.Id);
+            _absences?.Remove(absenceDto);
+            Snackbar.Add("Absence deleted successfully", Severity.Success);
+        }
+    }
+
+}

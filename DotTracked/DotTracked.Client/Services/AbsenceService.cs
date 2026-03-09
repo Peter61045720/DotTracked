@@ -5,19 +5,19 @@ using MudBlazor;
 
 namespace DotTracked.Client.Services;
 
-public class IssueService(HttpClient http, ISnackbar snackbar) : IIssueService
+public class AbsenceService(HttpClient http, ISnackbar snackbar) : IAbsenceService
 {
-    public async Task<List<IssueDto>> GetIssuesAsync()
+    public async Task<List<AbsenceDto>> GetAbsencesAsync()
     {
-        var response = await http.GetAsync("api/issues");
+        var response = await http.GetAsync("api/absences");
 
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<List<IssueDto>>() ?? [];
+        return await response.Content.ReadFromJsonAsync<List<AbsenceDto>>() ?? [];
     }
 
-    public async Task<IssueDto?> GetIssueByIdAsync(Guid id)
+    public async Task<AbsenceDto?> GetAbsenceById(Guid id)
     {
-        var response = await http.GetAsync($"api/issues/{id}");
+        var response = await http.GetAsync($"api/absences/{id}");
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
@@ -32,23 +32,23 @@ public class IssueService(HttpClient http, ISnackbar snackbar) : IIssueService
         }
 
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<IssueDto>();
+        return await response.Content.ReadFromJsonAsync<AbsenceDto>();
     }
 
-    public async Task<IssueDto> CreateIssueAsync(IssueDto issueDto)
+    public async Task<AbsenceDto> CreateAbsenceAsync(AbsenceDto absenceDto)
     {
-        var response = await http.PostAsJsonAsync("api/issues", issueDto);
+        var response = await http.PostAsJsonAsync("api/absences", absenceDto);
 
         response.EnsureSuccessStatusCode();
 
-        var createdIssue = await response.Content.ReadFromJsonAsync<IssueDto>();
+        var createdAbsence = await response.Content.ReadFromJsonAsync<AbsenceDto>();
 
-        return createdIssue ?? throw new InvalidOperationException("The server did not return the created data");
+        return createdAbsence ?? throw new InvalidOperationException("The server did not return the created data");
     }
 
-    public async Task UpdateIssueAsync(Guid id, IssueDto issueDto)
+    public async Task UpdateAbsenceAsync(Guid id, AbsenceDto absenceDto)
     {
-        var response = await http.PutAsJsonAsync($"api/issues/{id}", issueDto);
+        var response = await http.PutAsJsonAsync($"api/absences/{id}", absenceDto);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
@@ -65,9 +65,9 @@ public class IssueService(HttpClient http, ISnackbar snackbar) : IIssueService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task DeleteIssueAsync(Guid id)
+    public async Task DeleteAbsenceAsync(Guid id)
     {
-        var response = await http.DeleteAsync($"api/issues/{id}");
+        var response = await http.DeleteAsync($"api/absences/{id}");
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {

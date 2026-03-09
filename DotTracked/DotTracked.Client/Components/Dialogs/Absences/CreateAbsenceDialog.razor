@@ -1,0 +1,63 @@
+﻿@using DotTracked.Shared.DTOs
+@using DotTracked.Shared.Enums
+@inject ISnackbar Snackbar
+
+<EditForm Model="_absenceDto" OnValidSubmit="CreateAbsence">
+    <DataAnnotationsValidator/>
+
+    <MudDialog>
+        <TitleContent>
+            <MudText Typo="Typo.h6">Add Absence</MudText>
+        </TitleContent>
+
+        <DialogContent>
+            <MudSelect @bind-Value="_absenceDto.Type" Label="Type">
+                @foreach (var absenceType in Enum.GetValues<AbsenceType>())
+                {
+                    <MudSelectItem Value="@absenceType">@absenceType.ToString()</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudTextField @bind-Value="_absenceDto.Description" For="@(() => _absenceDto.Description)"
+                          Label="Description" Lines="3" Immediate="true"/>
+
+            <MudDateRangePicker @bind-DateRange="_dateRange" PlaceholderStart="Start Date" PlaceholderEnd="End Date"
+                                Clearable="true"/>
+        </DialogContent>
+
+        <DialogActions>
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled">Create</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    private readonly AbsenceDto _absenceDto = new();
+
+    private DateRange _dateRange = new();
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void CreateAbsence()
+    {
+        if (_dateRange.Start is null || _dateRange.End is null)
+        {
+            Snackbar.Add("Please select a date range", Severity.Error);
+            return;
+        }
+
+        _absenceDto.StartDate = _dateRange.Start.Value.Date;
+        _absenceDto.EndDate = _dateRange.End.Value.Date;
+
+        MudDialog.Close(DialogResult.Ok(_absenceDto));
+    }
+
+}

@@ -12,4 +12,5 @@ public class ApplicationUser : IdentityUser
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<Issue> Issues { get; } = new List<Issue>();
+    public ICollection<Absence> Absences { get; } = new List<Absence>();
 }

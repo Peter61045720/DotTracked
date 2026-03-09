@@ -17,6 +17,7 @@
     else if (_issues.Count == 0)
     {
         <MudAlert Severity="Severity.Info">No issues available</MudAlert>
+        <MudButton OnClick="CreateIssueAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Class="mt-4">Add Issue</MudButton>
     }
     else
     {
@@ -43,7 +44,6 @@
             </Columns>
         </MudDataGrid>
     }
-
 </MudContainer>
 
 @code {
@@ -98,9 +98,9 @@
         var dialog = await DialogService.ShowAsync<UpdateIssueDialog>("Update Issue", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data is IssueDto updatedIssue)
+        if (!result.Canceled && result.Data is IssueDto updatedIssueDto)
         {
-            await IssueService.UpdateIssueAsync(updatedIssue.Id, updatedIssue);
+            await IssueService.UpdateIssueAsync(updatedIssueDto.Id, updatedIssueDto);
             Snackbar.Add("Issue updated successfully", Severity.Success);
         }
     }

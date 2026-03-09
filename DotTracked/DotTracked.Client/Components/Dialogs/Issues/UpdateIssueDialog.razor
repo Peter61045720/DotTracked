@@ -11,7 +11,6 @@
         </TitleContent>
 
         <DialogContent>
-
             <MudTextField @bind-Value="IssueDto.Title" For="@(() => IssueDto.Title)"
                           Label="Title" Immediate="true"/>
 
@@ -33,14 +32,12 @@
             </MudSelect>
 
             <MudDatePicker @bind-Date="PickerDate" Label="Due Date" ShowToolbar="false"/>
-
         </DialogContent>
 
         <DialogActions>
             <MudButton OnClick="Cancel">Cancel</MudButton>
             <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled">Update</MudButton>
         </DialogActions>
-
     </MudDialog>
 </EditForm>
 

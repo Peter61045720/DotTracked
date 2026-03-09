@@ -1,0 +1,69 @@
+﻿@using DotTracked.Shared.DTOs
+@using DotTracked.Shared.Enums
+@inject ISnackbar Snackbar
+
+<EditForm Model="@AbsenceDto" OnValidSubmit="UpdateAbsence">
+    <DataAnnotationsValidator/>
+
+    <MudDialog>
+        <TitleContent>
+            <MudText Typo="Typo.h6">Update Absence</MudText>
+        </TitleContent>
+
+        <DialogContent>
+            <MudSelect @bind-Value="AbsenceDto.Type" Label="Type">
+                @foreach (var absenceType in Enum.GetValues<AbsenceType>())
+                {
+                    <MudSelectItem Value="@absenceType">@absenceType.ToString()</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudTextField @bind-Value="AbsenceDto.Description" For="@(() => AbsenceDto.Description)"
+                          Label="Description" Lines="3" Immediate="true"/>
+
+            <MudDateRangePicker @bind-DateRange="_dateRange" PlaceholderStart="Start Date" PlaceholderEnd="End Date"
+                                Clearable="true"/>
+        </DialogContent>
+
+        <DialogActions>
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled">Update</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public AbsenceDto AbsenceDto { get; set; } = new();
+
+    private DateRange _dateRange;
+
+    protected override void OnInitialized()
+    {
+        _dateRange = new DateRange(AbsenceDto.StartDate, AbsenceDto.EndDate);
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void UpdateAbsence()
+    {
+        if (_dateRange.Start is null || _dateRange.End is null)
+        {
+            Snackbar.Add("Please select a date range", Severity.Error);
+            return;
+        }
+
+        AbsenceDto.StartDate = _dateRange.Start.Value.Date;
+        AbsenceDto.EndDate = _dateRange.End.Value.Date;
+
+        MudDialog.Close(DialogResult.Ok(AbsenceDto));
+    }
+
+}
