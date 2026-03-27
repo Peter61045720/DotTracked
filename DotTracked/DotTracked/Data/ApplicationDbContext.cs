@@ -9,6 +9,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
     public DbSet<Issue> Issues { get; set; }
     public DbSet<Absence> Absences { get; set; }
+    public DbSet<Group> Groups { get; set; }
+    public DbSet<GroupMember> GroupMembers { get; set; }
+    public DbSet<Assignment> Assignments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -18,9 +21,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<Issue>().Property(i => i.Description).HasMaxLength(400);
         modelBuilder.Entity<Issue>()
             .HasOne(i => i.Creator)
-            .WithMany(u => u.Issues)
+            .WithMany(u => u.CreatedIssues)
             .HasForeignKey(i => i.CreatorId)
-            .IsRequired();
+            .IsRequired(false);
+        modelBuilder.Entity<Issue>()
+            .HasMany(i => i.Assignees)
+            .WithMany(u => u.AssignedIssues)
+            .UsingEntity<Assignment>(
+                r => r.HasOne<ApplicationUser>(e => e.User).WithMany(e => e.Assignments).HasForeignKey(e => e.UserId),
+                l => l.HasOne<Issue>(e => e.Issue).WithMany(e => e.Assignments).HasForeignKey(e => e.IssueId),
+                j => j.HasKey(e => new { e.IssueId, e.UserId }));
 
         modelBuilder.Entity<Absence>().Property(a => a.Description).HasMaxLength(200);
         modelBuilder.Entity<Absence>()
@@ -28,5 +38,18 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany(u => u.Absences)
             .HasForeignKey(a => a.UserId)
             .IsRequired();
+
+        modelBuilder.Entity<Group>()
+            .HasMany(g => g.Issues)
+            .WithOne(i => i.Group)
+            .HasForeignKey(i => i.GroupId)
+            .IsRequired(false);
+        modelBuilder.Entity<Group>()
+            .HasMany(g => g.Members)
+            .WithMany(u => u.Groups)
+            .UsingEntity<GroupMember>(
+                r => r.HasOne<ApplicationUser>(e => e.User).WithMany(e => e.GroupMembers).HasForeignKey(e => e.UserId),
+                l => l.HasOne<Group>(e => e.Group).WithMany(e => e.GroupMembers).HasForeignKey(e => e.GroupId),
+                j => j.HasKey(e => new { e.GroupId, e.UserId }));
     }
 }

@@ -13,6 +13,12 @@ public class Issue
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    public string CreatorId { get; set; }
-    public ApplicationUser Creator { get; set; } = null!;
+    public string? CreatorId { get; set; }
+    public ApplicationUser? Creator { get; set; }
+
+    public Guid? GroupId { get; set; }
+    public Group? Group { get; set; }
+
+    public ICollection<ApplicationUser> Assignees { get; } = new List<ApplicationUser>();
+    public ICollection<Assignment> Assignments { get; } = new List<Assignment>();
 }

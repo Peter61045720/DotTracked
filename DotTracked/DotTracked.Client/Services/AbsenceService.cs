@@ -15,7 +15,7 @@ public class AbsenceService(HttpClient http, ISnackbar snackbar) : IAbsenceServi
         return await response.Content.ReadFromJsonAsync<List<AbsenceDto>>() ?? [];
     }
 
-    public async Task<AbsenceDto?> GetAbsenceById(Guid id)
+    public async Task<AbsenceDto?> GetAbsenceByIdAsync(Guid id)
     {
         var response = await http.GetAsync($"api/absences/{id}");
 

@@ -22,7 +22,7 @@ public static class IssueEndpoints
             }
 
             var issues = await db.Issues
-                .Where(issue => issue.CreatorId == userId)
+                .Where(issue => issue.CreatorId == userId && issue.GroupId == null)
                 .Select(issue => new IssueDto
                 {
                     Id = issue.Id,
@@ -53,7 +53,7 @@ public static class IssueEndpoints
                 return Results.NotFound();
             }
 
-            if (issue.CreatorId != userId)
+            if (issue.CreatorId != userId || issue.GroupId is not null)
             {
                 return Results.Forbid();
             }

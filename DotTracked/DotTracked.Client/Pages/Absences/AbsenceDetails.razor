@@ -62,7 +62,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _absenceDto = await AbsenceService.GetAbsenceById(Id);
+        _absenceDto = await AbsenceService.GetAbsenceByIdAsync(Id);
     }
 
     private void NavigateBack()

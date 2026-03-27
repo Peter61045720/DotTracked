@@ -75,6 +75,7 @@ public class Program
         app.MapUserEndpoints();
         app.MapIssueEndpoints();
         app.MapAbsenceEndpoints();
+        app.MapGroupEndpoints();
 
         app.Run();
     }
