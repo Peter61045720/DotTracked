@@ -289,18 +289,16 @@ public static class GroupEndpoints
             return TypedResults.Forbid();
         }
 
-        var memberId = await db.Users
-            .Where(u => u.Email == email)
-            .Select(u => u.Id)
-            .SingleOrDefaultAsync();
+        var memberToAdd = await db.Users
+            .SingleOrDefaultAsync(u => u.Email == email);
 
-        if (memberId is null)
+        if (memberToAdd is null)
         {
             return TypedResults.NotFound();
         }
 
         var alreadyMember = await db.GroupMembers
-            .AnyAsync(gm => gm.GroupId == groupId && gm.UserId == memberId);
+            .AnyAsync(gm => gm.GroupId == groupId && gm.UserId == memberToAdd.Id);
 
         if (alreadyMember)
         {
@@ -310,7 +308,7 @@ public static class GroupEndpoints
         var groupMember = new GroupMember
         {
             GroupId = groupId,
-            UserId = memberId,
+            UserId = memberToAdd.Id,
             IsModerator = false,
             JoinedAt = DateTime.UtcNow
         };
@@ -318,7 +316,13 @@ public static class GroupEndpoints
         await db.GroupMembers.AddAsync(groupMember);
         await db.SaveChangesAsync();
 
-        return TypedResults.Created($"/groups/{groupId}/members/{memberId}");
+        return TypedResults.Created($"/groups/{groupId}/members/{memberToAdd.Id}", new UserDto
+        {
+            Email = memberToAdd.Email!,
+            DisplayName = memberToAdd.DisplayName,
+            FirstName = memberToAdd.FirstName,
+            LastName = memberToAdd.LastName
+        });
     }
 
     private static async Task<IResult> DeleteGroupMember(
@@ -643,18 +647,16 @@ public static class GroupEndpoints
             return TypedResults.Forbid();
         }
 
-        var memberId = await db.Users
-            .Where(u => u.Email == email)
-            .Select(u => u.Id)
-            .SingleOrDefaultAsync();
+        var memberToAdd = await db.Users
+            .SingleOrDefaultAsync(u => u.Email == email);
 
-        if (memberId is null)
+        if (memberToAdd is null)
         {
             return TypedResults.NotFound();
         }
 
         var isAssignmentExists = await db.Assignments
-            .AnyAsync(a => a.IssueId == issueId && a.UserId == memberId);
+            .AnyAsync(a => a.IssueId == issueId && a.UserId == memberToAdd.Id);
 
         if (isAssignmentExists)
         {
@@ -664,14 +666,20 @@ public static class GroupEndpoints
         var assignment = new Assignment
         {
             IssueId = issueId,
-            UserId = memberId,
+            UserId = memberToAdd.Id,
             AssignedAt = DateTime.UtcNow
         };
 
         await db.Assignments.AddAsync(assignment);
         await db.SaveChangesAsync();
 
-        return TypedResults.Created($"/groups/{groupId}/issues/{issueId}/assignment");
+        return TypedResults.Created($"/groups/{groupId}/issues/{issueId}/assignment", new UserDto
+        {
+            Email = memberToAdd.Email!,
+            DisplayName = memberToAdd.DisplayName,
+            FirstName = memberToAdd.FirstName,
+            LastName = memberToAdd.LastName
+        });
     }
 
     private static async Task<IResult> DeleteAssignment(
