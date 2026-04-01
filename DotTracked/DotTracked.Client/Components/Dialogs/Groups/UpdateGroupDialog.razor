@@ -1,0 +1,40 @@
+﻿@using DotTracked.Shared.DTOs
+<EditForm Model="@GroupDto" OnValidSubmit="UpdateGroup">
+    <DataAnnotationsValidator/>
+
+    <MudDialog>
+        <TitleContent>
+            <MudText Typo="Typo.h6">Update Group</MudText>
+        </TitleContent>
+
+        <DialogContent>
+            <MudTextField @bind-Value="GroupDto.Name" For="@(() => GroupDto.Name)"
+                          Label="Name" Immediate="true"/>
+        </DialogContent>
+
+        <DialogActions>
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled">Update</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public GroupDto GroupDto { get; set; } = new();
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void UpdateGroup()
+    {
+        MudDialog.Close(DialogResult.Ok(GroupDto));
+    }
+
+}

@@ -1,0 +1,168 @@
+﻿@page "/groups/{id:guid}"
+@using DotTracked.Client.Components.Dialogs
+@using DotTracked.Client.Components.Dialogs.Groups
+@using DotTracked.Client.Services
+@using DotTracked.Shared.DTOs
+
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IGroupService GroupService
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    @if (_groupDto == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+    }
+    else
+    {
+        <MudButton OnClick="NavigateBack" StartIcon="@Icons.Material.Filled.ChevronLeft" Color="Color.Primary">Back to list</MudButton>
+
+        <MudText Typo="Typo.h5" Class="my-6">Group Details</MudText>
+
+        <MudPaper Elevation="4" Class="pa-4">
+            <MudGrid Spacing="6">
+                <MudItem xs="6">
+                    <MudText>Name:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText>@_groupDto.Name</MudText>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText>Role:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText>@GetRole(_groupDto.IsModerator)</MudText>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText>Joined At:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText>@_groupDto.JoinedAt</MudText>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText>Member Count:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText>@_groupDto.MemberCount</MudText>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudDivider/>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudButton OnClick="@(() => GoToPage("members"))" EndIcon="@Icons.Material.Filled.ChevronRight" Color="Color.Primary" Class="ml-n2">View Members</MudButton>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudButton OnClick="@(() => GoToPage("issues"))" EndIcon="@Icons.Material.Filled.ChevronRight" Color="Color.Primary" Class="ml-n2">View Issues</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        @if (_groupDto.IsModerator)
+        {
+            <MudText Typo="Typo.h5" Class="my-6">Manage Group</MudText>
+
+            <MudPaper Elevation="4" Class="pa-4">
+                <MudGrid Spacing="6">
+                    <MudItem xs="6">
+                        <MudButton OnClick="() => UpdateGroupAsync(_groupDto)" StartIcon="@Icons.Material.Filled.Edit">Update</MudButton>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudButton OnClick="() => DeleteGroupAsync(_groupDto)" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error">Delete</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        }
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private GroupDto? _groupDto;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _groupDto = await GroupService.GetGroupByIdAsync(Id);
+
+        if (_groupDto is null)
+        {
+            NavigateBack();
+        }
+    }
+
+    public async Task UpdateGroupAsync(GroupDto groupDto)
+    {
+        var parameters = new DialogParameters<UpdateGroupDialog>
+        {
+            { x => x.GroupDto, groupDto }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<UpdateGroupDialog>("Update Group", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is GroupDto updatedGroupDto)
+        {
+            await GroupService.UpdateGroupAsync(updatedGroupDto.Id, updatedGroupDto);
+            Snackbar.Add("Group updated successfully", Severity.Success);
+        }
+    }
+
+    public async Task DeleteGroupAsync(GroupDto groupDto)
+    {
+        var parameters = new DialogParameters<ConfirmDeleteDialog>
+        {
+            { x => x.ItemType, "Group" },
+            { x => x.ItemName, groupDto.Name }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Delete Group", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await GroupService.DeleteGroupAsync(groupDto.Id);
+            Snackbar.Add("Group deleted successfully", Severity.Success);
+            NavigateBack();
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("groups");
+    }
+
+    private void GoToPage(string itemType)
+    {
+        Navigation.NavigateTo($"groups/{_groupDto?.Id}/{itemType}");
+    }
+
+    private static string GetRole(bool isModerator)
+    {
+        return isModerator ? "Moderator" : "Member";
+    }
+
+}

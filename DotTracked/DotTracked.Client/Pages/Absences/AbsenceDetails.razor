@@ -39,14 +39,14 @@
                     <MudText>Start Date:</MudText>
                 </MudItem>
                 <MudItem xs="6">
-                    @_absenceDto.StartDate.Date
+                    @DateOnly.FromDateTime(_absenceDto.StartDate)
                 </MudItem>
 
                 <MudItem xs="6">
                     <MudText>End Date:</MudText>
                 </MudItem>
                 <MudItem xs="6">
-                    @_absenceDto.EndDate.Date
+                    @DateOnly.FromDateTime(_absenceDto.EndDate.Date)
                 </MudItem>
             </MudGrid>
         </MudPaper>

@@ -1,0 +1,83 @@
+﻿@page "/groups"
+@using DotTracked.Client.Components.Dialogs.Groups
+@using DotTracked.Client.Services
+@using DotTracked.Shared.DTOs
+
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IGroupService GroupService
+@inject IDialogService DialogService
+
+<MudContainer Class="mt-8">
+    @if (_groups == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+    }
+    else if (_groups.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">No groups available</MudAlert>
+        <MudButton OnClick="CreateGroupAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Class="mt-4">Add Group</MudButton>
+    }
+    else
+    {
+        <MudDataGrid T="GroupDto" Items="_groups" Hover="true" Striped="true" RowClick="@(row => GoToGroup(row.Item.Id))" RowStyle="cursor: pointer;">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Groups</MudText>
+                <MudSpacer/>
+                <MudButton OnClick="CreateGroupAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary">Add Group</MudButton>
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="g => g.Name" Title="Name"/>
+                <PropertyColumn Property="g => GetRole(g.IsModerator)" Title="Role"/>
+                <PropertyColumn Property="g => g.JoinedAt" Title="Joined At"/>
+                <PropertyColumn Property="g => g.MemberCount" Title="Member Count"/>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudButton OnClick="() => GoToGroup(context.Item!.Id)" Color="Color.Primary">View</MudButton>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    }
+</MudContainer>
+
+@code {
+    private List<GroupDto>? _groups;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _groups = await GroupService.GetGroupsAsync();
+    }
+
+    public void GoToGroup(Guid id)
+    {
+        Navigation.NavigateTo($"groups/{id}");
+    }
+
+    public async Task CreateGroupAsync()
+    {
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<CreateGroupDialog>("Create Group", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is GroupDto newGroupDto)
+        {
+            newGroupDto = await GroupService.CreateGroupAsync(newGroupDto);
+            _groups?.Add(newGroupDto);
+            Snackbar.Add("Group created successfully", Severity.Success);
+        }
+    }
+
+    private static string GetRole(bool isModerator)
+    {
+        return isModerator ? "Moderator" : "Member";
+    }
+
+}

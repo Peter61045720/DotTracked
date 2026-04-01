@@ -32,7 +32,7 @@
                 <PropertyColumn Property="i => i.Description" Title="Description"/>
                 <PropertyColumn Property="i => i.Priority.ToString()" Title="Priority"/>
                 <PropertyColumn Property="i => i.Status.ToString()" Title="Status"/>
-                <PropertyColumn Property="i => i.DueDate" Title="Due Date"/>
+                <PropertyColumn Property="i => DateOnly.FromDateTime(i.DueDate)" Title="Due Date"/>
                 <TemplateColumn>
                     <CellTemplate>
                         <MudStack Row>

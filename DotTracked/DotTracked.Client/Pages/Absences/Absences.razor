@@ -30,8 +30,8 @@
             <Columns>
                 <PropertyColumn Property="a => a.Type.ToString()" Title="Type"/>
                 <PropertyColumn Property="a => a.Description" Title="Description"/>
-                <PropertyColumn Property="a => a.StartDate.Date" Title="Start Date"/>
-                <PropertyColumn Property="a => a.EndDate.Date" Title="End Date"/>
+                <PropertyColumn Property="a => DateOnly.FromDateTime(a.StartDate)" Title="Start Date"/>
+                <PropertyColumn Property="a => DateOnly.FromDateTime(a.EndDate)" Title="End Date"/>
                 <TemplateColumn>
                     <CellTemplate>
                         <MudStack Row>

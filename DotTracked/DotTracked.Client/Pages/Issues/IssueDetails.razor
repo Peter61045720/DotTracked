@@ -55,7 +55,7 @@
                     <MudText>Due Date:</MudText>
                 </MudItem>
                 <MudItem xs="6">
-                    @_issueDto.DueDate
+                    @DateOnly.FromDateTime(_issueDto.DueDate)
                 </MudItem>
             </MudGrid>
         </MudPaper>

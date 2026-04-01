@@ -27,6 +27,7 @@ internal class Program
 
         builder.Services.AddScoped<IIssueService, IssueService>();
         builder.Services.AddScoped<IAbsenceService, AbsenceService>();
+        builder.Services.AddScoped<IGroupService, GroupService>();
 
         builder.Services.AddAuthorizationCore();
         builder.Services.AddCascadingAuthenticationState();
