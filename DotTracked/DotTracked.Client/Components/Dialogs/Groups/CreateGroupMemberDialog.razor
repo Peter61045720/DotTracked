@@ -1,0 +1,48 @@
+﻿@using System.ComponentModel.DataAnnotations
+<EditForm Model="@_model" OnValidSubmit="CreateGroupMember">
+    <DataAnnotationsValidator/>
+
+    <MudDialog>
+        <TitleContent>
+            <MudText Typo="Typo.h6">Add Group Member</MudText>
+        </TitleContent>
+
+        <DialogContent>
+            <MudText>Enter the email address of the user you want to add to this group</MudText>
+
+            <MudTextField @bind-Value="_model.Email" For="@(() => _model.Email)"
+                          Label="Email" Immediate="true"/>
+        </DialogContent>
+
+        <DialogActions>
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled">Create</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    private readonly EmailModel _model = new();
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void CreateGroupMember()
+    {
+        MudDialog.Close(DialogResult.Ok(_model.Email));
+    }
+
+    public class EmailModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+    }
+
+}

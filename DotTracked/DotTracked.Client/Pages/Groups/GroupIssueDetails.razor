@@ -1,0 +1,186 @@
+﻿@page "/groups/{groupId:guid}/issues/{issueId:guid}"
+@using DotTracked.Client.Components.Dialogs
+@using DotTracked.Client.Components.Dialogs.Issues
+@using DotTracked.Client.Services
+@using DotTracked.Shared.DTOs
+@using DotTracked.Shared.Enums
+
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IGroupService GroupService
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    @if (_issueDto == null || _groupDto == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+    }
+    else
+    {
+        <MudButton OnClick="NavigateBack" StartIcon="@Icons.Material.Filled.ChevronLeft" Color="Color.Primary">Back to list</MudButton>
+
+        <MudText Typo="Typo.h5" Class="my-6">Issue Details</MudText>
+
+        <MudPaper Elevation="4" Class="pa-4">
+            <MudGrid Spacing="6">
+                <MudItem xs="6">
+                    <MudText>Title:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText>@_issueDto.Title</MudText>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText>Description:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText>@_issueDto.Description</MudText>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText>Priority:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudChip T="string" Color="GetPriorityColor(_issueDto.Priority)" Class="ml-n3">
+                        @_issueDto.Priority.ToString()
+                    </MudChip>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText>Status:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudChip T="string" Color="GetStatusColor(_issueDto.Status)" Class="ml-n3">
+                        @_issueDto.Status.ToString()
+                    </MudChip>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText>Due Date:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText>@DateOnly.FromDateTime(_issueDto.DueDate)</MudText>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        @if (_groupDto.IsModerator)
+        {
+            <MudText Typo="Typo.h5" Class="my-6">Manage Issue</MudText>
+
+            <MudPaper Elevation="4" Class="pa-4">
+                <MudGrid Spacing="6">
+                    <MudItem xs="6">
+                        <MudButton OnClick="UpdateIssueAsync" StartIcon="@Icons.Material.Filled.Edit">Update</MudButton>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudButton OnClick="DeleteIssueAsync" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error">Delete</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        }
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public Guid GroupId { get; set; }
+
+    [Parameter]
+    public Guid IssueId { get; set; }
+
+    private GroupDto? _groupDto;
+
+    private IssueDto? _issueDto;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _groupDto = await GroupService.GetGroupByIdAsync(GroupId);
+        _issueDto = await GroupService.GetGroupIssueByIdAsync(GroupId, IssueId);
+
+        if (_groupDto is null || _issueDto is null)
+        {
+            NavigateBack();
+        }
+    }
+
+    public async Task UpdateIssueAsync()
+    {
+        var parameters = new DialogParameters<UpdateIssueDialog>
+        {
+            { x => x.IssueDto, _issueDto }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<UpdateIssueDialog>("Update Group Issue", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is IssueDto updatedIssueDto)
+        {
+            await GroupService.UpdateGroupIssueAsync(GroupId, IssueId, updatedIssueDto);
+            Snackbar.Add("Group Issue updated successfully", Severity.Success);
+        }
+    }
+
+    public async Task DeleteIssueAsync()
+    {
+        var parameters = new DialogParameters<ConfirmDeleteDialog>
+        {
+            { x => x.ItemType, "Group Issue" },
+            { x => x.ItemName, _issueDto?.Title }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Delete Group Issue", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await GroupService.DeleteGroupIssueAsync(GroupId, IssueId);
+            Snackbar.Add("Group Issue deleted successfully", Severity.Success);
+            NavigateBack();
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo($"/groups/{GroupId}/issues");
+    }
+
+    private static Color GetPriorityColor(Priority priority)
+    {
+        return priority switch
+        {
+            Priority.High => Color.Error,
+            Priority.Medium => Color.Warning,
+            _ => Color.Default
+        };
+    }
+
+    private static Color GetStatusColor(Status status)
+    {
+        return status switch
+        {
+            Status.InProgress => Color.Primary,
+            Status.Done => Color.Success,
+            Status.DidNotComplete => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+}

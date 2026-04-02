@@ -1,0 +1,111 @@
+﻿@page "/groups/{groupId:guid}/issues"
+@using DotTracked.Client.Components.Dialogs.Issues
+@using DotTracked.Client.Services
+@using DotTracked.Shared.DTOs
+
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IGroupService GroupService
+@inject IDialogService DialogService
+
+<MudContainer Class="mt-8">
+    @if (_issues == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+    }
+    else if (_issues.Count == 0)
+    {
+        <MudButton OnClick="NavigateBack" StartIcon="@Icons.Material.Filled.ChevronLeft" Color="Color.Primary">Back to Group Details</MudButton>
+        <MudAlert Severity="Severity.Info" Class="my-4">No group issues available</MudAlert>
+
+        @if (_groupDto!.IsModerator)
+        {
+            <MudButton OnClick="CreateIssueAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary">Add Group Issue</MudButton>
+        }
+    }
+    else
+    {
+        <MudButton OnClick="NavigateBack" StartIcon="@Icons.Material.Filled.ChevronLeft" Color="Color.Primary" Class="mb-4">Back to Group Details</MudButton>
+
+        <MudDataGrid T="IssueDto" Items="_issues" Hover="true" Striped="true" RowClick="@(row => GoToIssue(row.Item.Id))" RowStyle="cursor: pointer;">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Group Issues</MudText>
+                <MudSpacer/>
+
+                @if (_groupDto!.IsModerator)
+                {
+                    <MudButton OnClick="CreateIssueAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary">Add Group Issue</MudButton>
+                }
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="i => i.Title" Title="Title"/>
+                <PropertyColumn Property="i => i.Description" Title="Description"/>
+                <PropertyColumn Property="i => i.Priority" Title="Priority"/>
+                <PropertyColumn Property="i => i.Status" Title="Status"/>
+                <PropertyColumn Property="i => DateOnly.FromDateTime(i.DueDate)" Title="Due Date"/>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudButton OnClick="() => GoToIssue(context.Item!.Id)" Color="Color.Primary">View</MudButton>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public Guid GroupId { get; set; }
+
+    private GroupDto? _groupDto;
+
+    private List<IssueDto>? _issues;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _groupDto = await GroupService.GetGroupByIdAsync(GroupId);
+        _issues = await GroupService.GetGroupIssuesAsync(GroupId);
+
+        if (_groupDto is null)
+        {
+            NavigateBack();
+        }
+    }
+
+    public async Task CreateIssueAsync()
+    {
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<CreateIssueDialog>("Create Group Issue", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is IssueDto newIssueDto)
+        {
+            var createdIssueDto = await GroupService.CreateGroupIssueAsync(GroupId, newIssueDto);
+
+            if (createdIssueDto is not null)
+            {
+                _issues?.Add(createdIssueDto);
+                Snackbar.Add("Group Issue created successfully", Severity.Success);
+            }
+        }
+    }
+
+    private void GoToIssue(Guid issueId)
+    {
+        Navigation.NavigateTo($"groups/{GroupId}/issues/{issueId}");
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo($"groups/{GroupId}");
+    }
+
+}

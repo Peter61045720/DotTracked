@@ -70,10 +70,10 @@
             <MudPaper Elevation="4" Class="pa-4">
                 <MudGrid Spacing="6">
                     <MudItem xs="6">
-                        <MudButton OnClick="() => UpdateGroupAsync(_groupDto)" StartIcon="@Icons.Material.Filled.Edit">Update</MudButton>
+                        <MudButton OnClick="UpdateGroupAsync" StartIcon="@Icons.Material.Filled.Edit">Update</MudButton>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudButton OnClick="() => DeleteGroupAsync(_groupDto)" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error">Delete</MudButton>
+                        <MudButton OnClick="DeleteGroupAsync" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error">Delete</MudButton>
                     </MudItem>
                 </MudGrid>
             </MudPaper>
@@ -98,11 +98,11 @@
         }
     }
 
-    public async Task UpdateGroupAsync(GroupDto groupDto)
+    public async Task UpdateGroupAsync()
     {
         var parameters = new DialogParameters<UpdateGroupDialog>
         {
-            { x => x.GroupDto, groupDto }
+            { x => x.GroupDto, _groupDto }
         };
 
         var options = new DialogOptions
@@ -123,12 +123,12 @@
         }
     }
 
-    public async Task DeleteGroupAsync(GroupDto groupDto)
+    public async Task DeleteGroupAsync()
     {
         var parameters = new DialogParameters<ConfirmDeleteDialog>
         {
             { x => x.ItemType, "Group" },
-            { x => x.ItemName, groupDto.Name }
+            { x => x.ItemName, _groupDto?.Name }
         };
 
         var options = new DialogOptions
@@ -144,7 +144,7 @@
 
         if (!result.Canceled)
         {
-            await GroupService.DeleteGroupAsync(groupDto.Id);
+            await GroupService.DeleteGroupAsync(Id);
             Snackbar.Add("Group deleted successfully", Severity.Success);
             NavigateBack();
         }

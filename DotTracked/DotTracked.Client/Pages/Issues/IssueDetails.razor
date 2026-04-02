@@ -23,14 +23,14 @@
                     <MudText>Title:</MudText>
                 </MudItem>
                 <MudItem xs="6">
-                    @_issueDto.Title
+                    <MudText>@_issueDto.Title</MudText>
                 </MudItem>
 
                 <MudItem xs="6">
                     <MudText>Description:</MudText>
                 </MudItem>
                 <MudItem xs="6">
-                    @_issueDto.Description
+                    <MudText>@_issueDto.Description</MudText>
                 </MudItem>
 
                 <MudItem xs="6">
@@ -55,7 +55,7 @@
                     <MudText>Due Date:</MudText>
                 </MudItem>
                 <MudItem xs="6">
-                    @DateOnly.FromDateTime(_issueDto.DueDate)
+                    <MudText>@DateOnly.FromDateTime(_issueDto.DueDate)</MudText>
                 </MudItem>
             </MudGrid>
         </MudPaper>
