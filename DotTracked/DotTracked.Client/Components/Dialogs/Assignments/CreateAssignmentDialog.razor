@@ -1,0 +1,43 @@
+﻿@using DotTracked.Shared.DTOs
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add Assignment</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudText>Select a Member to whom you want to assign this Issue</MudText>
+        <MudSelect @bind-Value="_selectedUser" T="UserDto" Label="Selected Member">
+            @foreach (var member in Members)
+            {
+                <MudSelectItem Value="member">@member.Email</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="CreateAssignment" Color="Color.Primary" Variant="Variant.Filled" Disabled="_selectedUser == null">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public List<UserDto> Members { get; set; } = [];
+
+    private UserDto? _selectedUser;
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void CreateAssignment()
+    {
+        MudDialog.Close(DialogResult.Ok(_selectedUser));
+    }
+
+}

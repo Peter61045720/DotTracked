@@ -1,5 +1,7 @@
 ﻿@page "/groups/{groupId:guid}/issues/{issueId:guid}"
 @using DotTracked.Client.Components.Dialogs
+@using DotTracked.Client.Components.Dialogs.Assignments
+@using DotTracked.Client.Components.Dialogs.Groups
 @using DotTracked.Client.Components.Dialogs.Issues
 @using DotTracked.Client.Services
 @using DotTracked.Shared.DTOs
@@ -64,6 +66,45 @@
             </MudGrid>
         </MudPaper>
 
+        <MudText Typo="Typo.h5" Class="my-6">Issue Assignees</MudText>
+
+        <MudPaper Elevation="4" Class="pa-4">
+            @if (_groupDto.IsModerator)
+            {
+                <MudButton OnClick="CreateAssignmentAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Assignment" Color="Color.Primary" Class="mb-4">Assign to a Member</MudButton>
+            }
+
+            @if (_assignees == null)
+            {
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+            }
+            else if (_assignees.Count == 0)
+            {
+                <MudAlert Severity="Severity.Info">No Assignees available for this Issue</MudAlert>
+            }
+            else
+            {
+                <MudList T="string">
+                    @foreach (var assignee in _assignees)
+                    {
+                        <MudListItem OnClick="() => OpenGroupMemberDetailsDialogAsync(assignee)">
+                            <MudStack Row AlignItems="AlignItems.Center">
+                                <MudAvatar Color="Color.Primary">@($"{char.ToUpper(assignee.FirstName[0])}{char.ToUpper(assignee.LastName[0])}")</MudAvatar>
+                                <b>@($"{assignee.FirstName} {assignee.LastName}")</b>
+                                <MudText>(@assignee.Email)</MudText>
+                                <MudSpacer/>
+
+                                @if (_groupDto.IsModerator)
+                                {
+                                    <MudIconButton OnClick="() => DeleteAssignmentAsync(assignee)" Icon="@Icons.Material.Filled.PersonRemove" Color="Color.Error"/>
+                                }
+                            </MudStack>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+        </MudPaper>
+
         @if (_groupDto.IsModerator)
         {
             <MudText Typo="Typo.h5" Class="my-6">Manage Issue</MudText>
@@ -94,10 +135,13 @@
 
     private IssueDto? _issueDto;
 
+    private List<UserDto>? _assignees;
+
     protected override async Task OnInitializedAsync()
     {
         _groupDto = await GroupService.GetGroupByIdAsync(GroupId);
         _issueDto = await GroupService.GetGroupIssueByIdAsync(GroupId, IssueId);
+        _assignees = await GroupService.GetIssueAssigneesAsync(GroupId, IssueId);
 
         if (_groupDto is null || _issueDto is null)
         {
@@ -154,6 +198,83 @@
             await GroupService.DeleteGroupIssueAsync(GroupId, IssueId);
             Snackbar.Add("Group Issue deleted successfully", Severity.Success);
             NavigateBack();
+        }
+    }
+
+    public async Task OpenGroupMemberDetailsDialogAsync(UserDto userDto)
+    {
+        var parameters = new DialogParameters<GroupMemberDetailsDialog>
+        {
+            { x => x.UserDto, userDto }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        await DialogService.ShowAsync<GroupMemberDetailsDialog>("Member Details", parameters, options);
+    }
+
+    public async Task CreateAssignmentAsync()
+    {
+        var members = await GroupService.GetGroupMembersAsync(GroupId);
+
+        var parameters = new DialogParameters<CreateAssignmentDialog>
+        {
+            { x => x.Members, members }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<CreateAssignmentDialog>("Add Assignment", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is UserDto assignee)
+        {
+            var newAssignee = await GroupService.CreateAssignmentAsync(GroupId, IssueId, assignee.Email);
+
+            if (newAssignee is not null)
+            {
+                _assignees?.Add(newAssignee);
+                Snackbar.Add("Assignment created successfully", Severity.Success);
+            }
+        }
+    }
+
+    public async Task DeleteAssignmentAsync(UserDto userDto)
+    {
+        var parameters = new DialogParameters<ConfirmDeleteDialog>
+        {
+            { x => x.ItemType, "Assignment" },
+            { x => x.ItemName, $"Assignment to {userDto.Email}" }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Delete Assignment", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await GroupService.DeleteAssignmentAsync(GroupId, IssueId, userDto.Email);
+            _assignees?.Remove(userDto);
+            Snackbar.Add("Assignment deleted successfully", Severity.Success);
         }
     }
 
