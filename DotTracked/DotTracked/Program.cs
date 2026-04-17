@@ -11,7 +11,7 @@ namespace DotTracked;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
         builder.AddServiceDefaults();
@@ -42,6 +42,7 @@ public class Program
             options.UseSqlServer(connectionString, providerOptions => providerOptions.EnableRetryOnFailure()));
 
         builder.Services.AddIdentityCore<ApplicationUser>()
+            .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddSignInManager()
             .AddDefaultTokenProviders();
@@ -54,6 +55,12 @@ public class Program
         if (app.Environment.IsDevelopment())
         {
             app.UseWebAssemblyDebugging();
+
+            using var scope = app.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var config = services.GetRequiredService<IConfiguration>();
+
+            await DbInitializer.SeedRolesAndAdminAsync(services, config);
         }
         else
         {
@@ -76,7 +83,8 @@ public class Program
         app.MapIssueEndpoints();
         app.MapAbsenceEndpoints();
         app.MapGroupEndpoints();
+        app.MapAdminEndpoints();
 
-        app.Run();
+        await app.RunAsync();
     }
 }

@@ -28,6 +28,8 @@ internal class Program
         builder.Services.AddScoped<IIssueService, IssueService>();
         builder.Services.AddScoped<IAbsenceService, AbsenceService>();
         builder.Services.AddScoped<IGroupService, GroupService>();
+        // TODO: implement AdminService
+        // builder.Services.AddScoped<IAdminService, AdminService>();
 
         builder.Services.AddAuthorizationCore();
         builder.Services.AddCascadingAuthenticationState();

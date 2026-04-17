@@ -1,6 +1,7 @@
 ﻿@page "/Account/Register"
 @using System.ComponentModel.DataAnnotations
 @using DotTracked.Data
+@using DotTracked.Shared.Constants
 @using Microsoft.AspNetCore.Identity
 
 @inject UserManager<ApplicationUser> UserManager
@@ -97,11 +98,19 @@
         user.CreatedAt = currentTime;
         user.UpdatedAt = currentTime;
 
-        var result = await UserManager.CreateAsync(user, Input.Password);
+        var identityResult = await UserManager.CreateAsync(user, Input.Password);
 
-        if (!result.Succeeded)
+        if (!identityResult.Succeeded)
         {
-            _identityErrors = result.Errors;
+            _identityErrors = identityResult.Errors;
+            return;
+        }
+
+        var addToRoleResult = await UserManager.AddToRoleAsync(user, Roles.AppUser);
+
+        if (!addToRoleResult.Succeeded)
+        {
+            _identityErrors = addToRoleResult.Errors;
             return;
         }
 
