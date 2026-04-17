@@ -1,0 +1,85 @@
+﻿@page "/admin/users"
+@using DotTracked.Client.Components.Dialogs
+@using DotTracked.Client.Services
+@using DotTracked.Shared.Constants
+@using DotTracked.Shared.DTOs
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize(Roles = Roles.Admin)]
+
+@inject ISnackbar Snackbar
+@inject IAdminService AdminService
+@inject IDialogService DialogService
+
+<MudContainer Class="mt-8">
+    @if (_users == null)
+    {
+        <div class="d-flex justify-center align-center" style="height: 200px;">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+        </div>
+    }
+    else if (_users.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">No users available</MudAlert>
+    }
+    else
+    {
+        <MudDataGrid T="AdminUserDto" Items="_users" Hover="true" Striped="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Users</MudText>
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="u => u.Email" Title="Email"/>
+                <PropertyColumn Property="u => u.DisplayName" Title="Display Name"/>
+                <PropertyColumn Property="u => u.FirstName" Title="First Name"/>
+                <PropertyColumn Property="u => u.LastName" Title="Last Name"/>
+                <PropertyColumn Property="u => u.CreatedAt" Title="Created At"/>
+                <PropertyColumn Property="u => u.UpdatedAt" Title="Updated At"/>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudStack Row>
+                            <MudIconButton OnClick="@(() => DeleteUserAsync(context.Item!))" Icon="@Icons.Material.Filled.Delete" Color="Color.Error"/>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    }
+</MudContainer>
+
+@code {
+    private List<AdminUserDto>? _users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _users = await AdminService.GetUsersAsync();
+    }
+
+    public async Task DeleteUserAsync(AdminUserDto adminUserDto)
+    {
+        var parameters = new DialogParameters<ConfirmDeleteDialog>
+        {
+            { x => x.ItemType, "User" },
+            { x => x.ItemName, adminUserDto.Email }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Delete User", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await AdminService.DeleteUserAsync(adminUserDto.Id);
+            _users?.Remove(adminUserDto);
+            Snackbar.Add("User deleted successfully", Severity.Success);
+        }
+    }
+
+}

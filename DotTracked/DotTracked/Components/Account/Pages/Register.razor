@@ -115,7 +115,7 @@
         }
 
         await SignInManager.SignInAsync(user, false);
-        RedirectManager.RedirectTo("home");
+        RedirectManager.RedirectTo("");
     }
 
     private static ApplicationUser CreateUser()

@@ -51,7 +51,7 @@
                 {
                     <TemplateColumn>
                         <CellTemplate>
-                            <MudButton OnClick="() => DeleteGroupMemberAsync(context.Item)" StartIcon="@Icons.Material.Filled.PersonRemove" Color="Color.Error">Remove Member</MudButton>
+                            <MudButton OnClick="@(() => DeleteGroupMemberAsync(context.Item))" StartIcon="@Icons.Material.Filled.PersonRemove" Color="Color.Error">Remove Member</MudButton>
                         </CellTemplate>
                     </TemplateColumn>
                 }

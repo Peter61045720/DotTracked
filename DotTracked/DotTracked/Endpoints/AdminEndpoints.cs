@@ -35,9 +35,12 @@ public static class AdminEndpoints
         members.MapDelete("/{userId}", DeleteGroupMember);
     }
 
-    private static async Task<IResult> GetAllUsers(ApplicationDbContext db)
+    private static async Task<IResult> GetAllUsers(ApplicationDbContext db, ClaimsPrincipal user)
     {
+        var currentUserId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
         return TypedResults.Ok(await db.Users
+            .Where(u => u.Id != currentUserId)
             .Select(u => new AdminUserDto
             {
                 Id = u.Id,
@@ -215,26 +218,28 @@ public static class AdminEndpoints
             return TypedResults.BadRequest();
         }
 
+        var joinedAt = DateTime.UtcNow;
         var groupMember = new GroupMember
         {
             GroupId = groupId,
             UserId = userId,
             IsModerator = false,
-            JoinedAt = DateTime.UtcNow
+            JoinedAt = joinedAt
         };
 
         await db.GroupMembers.AddAsync(groupMember);
         await db.SaveChangesAsync();
 
-        return TypedResults.Created($"/groups/{groupId}/members/{userId}", new AdminUserDto
+        return TypedResults.Created($"/groups/{groupId}/members/{userId}", new AdminGroupMemberDto
         {
-            Id = memberToAdd.Id,
+            GroupId = groupId,
+            UserId = userId,
             Email = memberToAdd.Email!,
             DisplayName = memberToAdd.DisplayName,
             FirstName = memberToAdd.FirstName,
             LastName = memberToAdd.LastName,
-            CreatedAt = memberToAdd.CreatedAt,
-            UpdatedAt = memberToAdd.UpdatedAt
+            IsModerator = false,
+            JoinedAt = joinedAt
         });
     }
 

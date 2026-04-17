@@ -1,4 +1,5 @@
-﻿@inject NavigationManager Navigation
+﻿@using DotTracked.Shared.Constants
+@inject NavigationManager Navigation
 
 <MudLink Href="/" Class="mt-2">
     <MudImage Src="@(IsDarkMode ? "images/logo-dark.svg" : "images/logo-light.svg")" Alt="Logo" Height="24"></MudImage>
@@ -8,9 +9,18 @@
     <MudSpacer/>
 
     <MudButton Href="/" Variant="Variant.Text" Class="@GetActiveClass("")">Home</MudButton>
-    <MudButton Href="/issues" Variant="Variant.Text" Class="@GetActiveClass("issues")">Issues</MudButton>
-    <MudButton Href="/absences" Variant="Variant.Text" Class="@GetActiveClass("absences")">Absences</MudButton>
-    <MudButton Href="/groups" Variant="Variant.Text" Class="@GetActiveClass("groups")">Groups</MudButton>
+
+    @if (context.User.IsInRole(Roles.Admin))
+    {
+        <MudButton Href="/admin/users" Variant="Variant.Text" Class="@GetActiveClass("admin/users")">Users</MudButton>
+        <MudButton Href="/admin/groups" Variant="Variant.Text" Class="@GetActiveClass("admin/groups")">Groups</MudButton>
+    }
+    else
+    {
+        <MudButton Href="/issues" Variant="Variant.Text" Class="@GetActiveClass("issues")">Issues</MudButton>
+        <MudButton Href="/absences" Variant="Variant.Text" Class="@GetActiveClass("absences")">Absences</MudButton>
+        <MudButton Href="/groups" Variant="Variant.Text" Class="@GetActiveClass("groups")">Groups</MudButton>
+    }
 
     <MudSpacer/>
 

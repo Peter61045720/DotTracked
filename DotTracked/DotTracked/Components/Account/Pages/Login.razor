@@ -73,7 +73,7 @@
         var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, false, false);
         if (result.Succeeded)
         {
-            RedirectManager.RedirectTo("home");
+            RedirectManager.RedirectTo("");
         }
         else
         {

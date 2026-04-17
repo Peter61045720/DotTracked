@@ -1,0 +1,182 @@
+﻿@page "/admin/groups/{id:guid}/members"
+@using DotTracked.Client.Components.Dialogs
+@using DotTracked.Client.Components.Dialogs.Admin
+@using DotTracked.Client.Services
+@using DotTracked.Shared.Constants
+@using DotTracked.Shared.DTOs
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize(Roles = Roles.Admin)]
+
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IAdminService AdminService
+@inject IDialogService DialogService
+
+<MudContainer Class="mt-8">
+    @if (_groupMembers == null)
+    {
+        <div class="d-flex justify-center align-center" style="height: 200px;">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+        </div>
+    }
+    else if (_groupMembers.Count == 0)
+    {
+        <MudButton OnClick="NavigateBack" StartIcon="@Icons.Material.Filled.ChevronLeft" Color="Color.Primary">Back to Groups</MudButton>
+        <MudAlert Severity="Severity.Info" Class="my-4">No group members available</MudAlert>
+        <MudButton OnClick="CreateGroupMemberAsync" StartIcon="@Icons.Material.Filled.PersonAdd" Variant="Variant.Filled" Color="Color.Primary">Add Group Member</MudButton>
+    }
+    else
+    {
+        <MudButton OnClick="NavigateBack" StartIcon="@Icons.Material.Filled.ChevronLeft" Color="Color.Primary" Class="mb-4">Back to Groups</MudButton>
+
+        <MudDataGrid T="AdminGroupMemberDto" Items="_groupMembers" Hover="true" Striped="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Group Members</MudText>
+                <MudSpacer/>
+                <MudButton OnClick="CreateGroupMemberAsync" StartIcon="@Icons.Material.Filled.PersonAdd" Variant="Variant.Filled" Color="Color.Primary" Class="mr-4">Add Group Member</MudButton>
+                <MudButton OnClick="DeleteGroupAsync" StartIcon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" Color="Color.Error">Delete Group</MudButton>
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="gm => gm.Email" Title="Email"/>
+                <PropertyColumn Property="gm => gm.DisplayName" Title="Display Name"/>
+                <PropertyColumn Property="gm => gm.FirstName" Title="First Name"/>
+                <PropertyColumn Property="gm => gm.LastName" Title="Last Name"/>
+                <PropertyColumn Property="gm => gm.JoinedAt" Title="Joined At"/>
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudStack Row AlignItems="AlignItems.Center">
+                            <MudSelect T="bool"
+                                       Value="context.Item!.IsModerator"
+                                       ValueChanged="@(value => UpdateModeratorStatusAsync(context.Item!, value))">
+                                <MudSelectItem Value="true">Moderator</MudSelectItem>
+                                <MudSelectItem Value="false">Member</MudSelectItem>
+                            </MudSelect>
+                            <MudButton OnClick="@(() => DeleteGroupMemberAsync(context.Item!))" StartIcon="@Icons.Material.Filled.PersonRemove" Color="Color.Error">Remove Member</MudButton>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private AdminGroupDto? _groupDto;
+
+    private List<AdminGroupMemberDto>? _groupMembers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _groupDto = await AdminService.GetGroupByIdAsync(Id);
+        _groupMembers = await AdminService.GetGroupMembersAsync(Id);
+
+        if (_groupDto is null)
+        {
+            NavigateBack();
+        }
+    }
+
+    public async Task CreateGroupMemberAsync()
+    {
+        var users = await AdminService.GetUsersAsync();
+
+        var parameters = new DialogParameters<AdminCreateGroupMemberDialog>
+        {
+            { x => x.Users, users }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AdminCreateGroupMemberDialog>("Create Group Member", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is AdminUserDto adminUserDto)
+        {
+            var newMemberDto = await AdminService.CreateGroupMemberAsync(Id, adminUserDto.Id);
+
+            if (newMemberDto is not null)
+            {
+                _groupMembers?.Add(newMemberDto);
+                Snackbar.Add("Group Membership created successfully", Severity.Success);
+            }
+        }
+    }
+
+    public async Task UpdateModeratorStatusAsync(AdminGroupMemberDto adminGroupMemberDto, bool isModerator)
+    {
+        await AdminService.UpdateGroupModeratorStatusAsync(Id, adminGroupMemberDto.UserId, isModerator);
+        adminGroupMemberDto.IsModerator = isModerator;
+        Snackbar.Add($"{adminGroupMemberDto.DisplayName}'s status updated successfully", Severity.Success);
+    }
+
+    public async Task DeleteGroupMemberAsync(AdminGroupMemberDto adminGroupMemberDto)
+    {
+        var parameters = new DialogParameters<ConfirmDeleteDialog>
+        {
+            { x => x.ItemType, "Group Member" },
+            { x => x.ItemName, adminGroupMemberDto.Email }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Delete Group Member", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await AdminService.DeleteGroupMemberAsync(Id, adminGroupMemberDto.UserId);
+            _groupMembers?.Remove(adminGroupMemberDto);
+            Snackbar.Add("Group Member removed successfully", Severity.Success);
+        }
+    }
+
+    public async Task DeleteGroupAsync()
+    {
+        var parameters = new DialogParameters<ConfirmDeleteDialog>
+        {
+            { x => x.ItemType, "Group" },
+            { x => x.ItemName, _groupDto!.Name }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            CloseButton = true,
+            BackdropClick = false,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Delete Member", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await AdminService.DeleteGroupAsync(Id);
+            Snackbar.Add("Group deleted successfully", Severity.Success);
+            NavigateBack();
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("admin/groups");
+    }
+
+}

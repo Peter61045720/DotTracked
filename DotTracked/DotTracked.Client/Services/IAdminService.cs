@@ -14,7 +14,7 @@ public interface IAdminService
 
     Task<List<AdminGroupMemberDto>> GetGroupMembersAsync(Guid groupId);
     Task<AdminGroupMemberDto?> GetGroupMemberByIdAsync(Guid groupId, string userId);
-    Task<AdminUserDto> CreateGroupMemberAsync(Guid groupId, string userId);
+    Task<AdminGroupMemberDto?> CreateGroupMemberAsync(Guid groupId, string userId);
     Task UpdateGroupModeratorStatusAsync(Guid groupId, string userId, bool isModerator);
     Task DeleteGroupMemberAsync(Guid groupId, string userId);
 }

@@ -33,7 +33,7 @@
                 <PropertyColumn Property="g => g.MemberCount" Title="Member Count"/>
                 <TemplateColumn>
                     <CellTemplate>
-                        <MudButton OnClick="() => GoToGroup(context.Item!.Id)" Color="Color.Primary">View</MudButton>
+                        <MudButton OnClick="@(() => GoToGroup(context.Item!.Id))" Color="Color.Primary">View</MudButton>
                     </CellTemplate>
                 </TemplateColumn>
             </Columns>

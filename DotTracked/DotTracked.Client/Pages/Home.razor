@@ -1,5 +1,5 @@
 ﻿@page "/"
-@page "/home"
+@using DotTracked.Shared.Constants
 @using Microsoft.AspNetCore.Authorization
 
 @attribute [Authorize]
@@ -7,14 +7,16 @@
 <PageTitle>Home</PageTitle>
 
 <MudContainer>
-    <MudText>Home page works!</MudText>
+    <AuthorizeView>
+        @if (context.User.IsInRole(Roles.Admin))
+        {
+            <MudText>Signed in as an Admin</MudText>
+        }
+        else
+        {
+            <MudText>Signed in as a User</MudText>
+        }
+    </AuthorizeView>
 </MudContainer>
 
-@code {
-
-    protected override void OnInitialized()
-    {
-        Console.WriteLine("Home page works!");
-    }
-
-}
+@code { }
