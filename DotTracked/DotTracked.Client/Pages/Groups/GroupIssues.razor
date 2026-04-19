@@ -1,7 +1,11 @@
 ﻿@page "/groups/{groupId:guid}/issues"
 @using DotTracked.Client.Components.Dialogs.Issues
 @using DotTracked.Client.Services
+@using DotTracked.Shared.Constants
 @using DotTracked.Shared.DTOs
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize(Roles = Roles.AppUser)]
 
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar

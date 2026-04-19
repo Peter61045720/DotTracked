@@ -1,7 +1,11 @@
 ﻿@page "/issues/{id:guid}"
 @using DotTracked.Client.Services
+@using DotTracked.Shared.Constants
 @using DotTracked.Shared.DTOs
 @using DotTracked.Shared.Enums
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize(Roles = Roles.AppUser)]
 
 @inject NavigationManager Navigation
 @inject IIssueService IssueService

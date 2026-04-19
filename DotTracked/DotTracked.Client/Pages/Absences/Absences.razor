@@ -2,7 +2,11 @@
 @using DotTracked.Client.Components.Dialogs
 @using DotTracked.Client.Components.Dialogs.Absences
 @using DotTracked.Client.Services
+@using DotTracked.Shared.Constants
 @using DotTracked.Shared.DTOs
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize(Roles = Roles.AppUser)]
 
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
