@@ -1,4 +1,5 @@
 ﻿@page "/admin/groups"
+@using DotTracked.Client.Components
 @using DotTracked.Client.Components.Dialogs
 @using DotTracked.Client.Services
 @using DotTracked.Shared.Constants
@@ -15,9 +16,7 @@
 <MudContainer Class="mt-8">
     @if (_groups == null)
     {
-        <div class="d-flex justify-center align-center" style="height: 200px;">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
-        </div>
+        <CenteredSpinner/>
     }
     else if (_groups.Count == 0)
     {

@@ -1,0 +1,19 @@
+﻿<div class="d-flex justify-center align-center" style="height: 100%;">
+    <MudProgressCircular Color="Color" Size="Size" StrokeWidth="StrokeWidth" Indeterminate="Indeterminate"/>
+</div>
+
+@code {
+
+    [Parameter]
+    public Color Color { get; set; } = Color.Primary;
+
+    [Parameter]
+    public Size Size { get; set; } = Size.Medium;
+
+    [Parameter]
+    public int StrokeWidth { get; set; } = 3;
+
+    [Parameter]
+    public bool Indeterminate { get; set; } = true;
+
+}

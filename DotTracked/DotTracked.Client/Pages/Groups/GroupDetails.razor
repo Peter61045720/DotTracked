@@ -1,4 +1,5 @@
 ﻿@page "/groups/{id:guid}"
+@using DotTracked.Client.Components
 @using DotTracked.Client.Components.Dialogs
 @using DotTracked.Client.Components.Dialogs.Groups
 @using DotTracked.Client.Services
@@ -16,7 +17,7 @@
 <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
     @if (_groupDto == null)
     {
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+        <CenteredSpinner/>
     }
     else
     {

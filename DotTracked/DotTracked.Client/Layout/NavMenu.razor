@@ -18,8 +18,8 @@
     else
     {
         <MudButton Href="/issues" Variant="Variant.Text" Class="@GetActiveClass("issues")">Issues</MudButton>
-        <MudButton Href="/absences" Variant="Variant.Text" Class="@GetActiveClass("absences")">Absences</MudButton>
         <MudButton Href="/groups" Variant="Variant.Text" Class="@GetActiveClass("groups")">Groups</MudButton>
+        <MudButton Href="/absences" Variant="Variant.Text" Class="@GetActiveClass("absences")">Absences</MudButton>
     }
 
     <MudSpacer/>
@@ -63,8 +63,12 @@
 
     private string GetActiveClass(string uri)
     {
-        var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri).ToLower();
-        return relativePath == uri.ToLower() ? "mud-primary-text active-button mx-2" : "mx-2";
+        var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var isActive = string.IsNullOrEmpty(uri)
+            ? string.IsNullOrEmpty(relativePath)
+            : relativePath.StartsWith(uri, StringComparison.OrdinalIgnoreCase);
+
+        return isActive ? "mud-primary-text active-button mx-2" : "mx-2";
     }
 
 }

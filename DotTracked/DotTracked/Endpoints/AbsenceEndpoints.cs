@@ -36,6 +36,34 @@ public static class AbsenceEndpoints
             return Results.Ok(absences);
         });
 
+        absenceGroup.MapGet("/upcoming", async (ApplicationDbContext db, ClaimsPrincipal user) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId is null)
+            {
+                return Results.Unauthorized();
+            }
+
+            var today = DateTime.Today;
+
+            var absences = await db.Absences
+                .Where(a => a.UserId == userId && a.StartDate >= today)
+                .OrderBy(a => a.StartDate)
+                .Take(5)
+                .Select(a => new AbsenceDto
+                {
+                    Id = a.Id,
+                    Type = a.Type,
+                    Description = a.Description,
+                    StartDate = a.StartDate,
+                    EndDate = a.EndDate
+                })
+                .ToListAsync();
+
+            return Results.Ok(absences);
+        });
+
         absenceGroup.MapGet("/{id:guid}", async (ClaimsPrincipal user, Guid id, ApplicationDbContext db) =>
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);

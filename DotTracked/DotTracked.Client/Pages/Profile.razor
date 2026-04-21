@@ -1,4 +1,5 @@
 ﻿@page "/profile"
+@using DotTracked.Client.Components
 @using DotTracked.Client.Components.Dialogs
 @using DotTracked.Shared.DTOs
 @using Microsoft.AspNetCore.Authorization
@@ -21,7 +22,7 @@
         <MudCardContent>
             @if (_user == null)
             {
-                <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+                <CenteredSpinner/>
             }
             else
             {

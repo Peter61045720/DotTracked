@@ -37,6 +37,35 @@ public static class IssueEndpoints
             return Results.Ok(issues);
         });
 
+        issueGroup.MapGet("/upcoming", async (ApplicationDbContext db, ClaimsPrincipal user) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId is null)
+            {
+                return Results.Unauthorized();
+            }
+
+            var today = DateTime.Today;
+
+            var issues = await db.Issues
+                .Where(i => i.CreatorId == userId && i.GroupId == null && i.DueDate >= today)
+                .OrderBy(i => i.DueDate)
+                .Take(5)
+                .Select(i => new IssueDto
+                {
+                    Id = i.Id,
+                    Title = i.Title,
+                    Description = i.Description,
+                    Priority = i.Priority,
+                    Status = i.Status,
+                    DueDate = i.DueDate
+                })
+                .ToListAsync();
+
+            return Results.Ok(issues);
+        });
+
         issueGroup.MapGet("/{id:guid}", async (ClaimsPrincipal user, Guid id, ApplicationDbContext db) =>
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);

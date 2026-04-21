@@ -18,6 +18,14 @@ public class GroupService(HttpClient http, ISnackbar snackbar) : IGroupService
         return await response.Content.ReadFromJsonAsync<List<GroupDto>>() ?? [];
     }
 
+    public async Task<List<GroupNameDto>> GetGroupsPreviewAsync()
+    {
+        var response = await http.GetAsync($"{GroupPath}/preview");
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<GroupNameDto>>() ?? [];
+    }
+
     public async Task<GroupDto?> GetGroupByIdAsync(Guid id)
     {
         var response = await http.GetAsync($"{GroupPath}/{id}");

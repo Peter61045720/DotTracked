@@ -1,4 +1,5 @@
 ﻿@page "/issues/{id:guid}"
+@using DotTracked.Client.Components
 @using DotTracked.Client.Services
 @using DotTracked.Shared.Constants
 @using DotTracked.Shared.DTOs
@@ -13,7 +14,7 @@
 <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
     @if (_issueDto == null)
     {
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+        <CenteredSpinner/>
     }
     else
     {

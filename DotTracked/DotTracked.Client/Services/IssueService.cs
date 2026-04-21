@@ -15,6 +15,14 @@ public class IssueService(HttpClient http, ISnackbar snackbar) : IIssueService
         return await response.Content.ReadFromJsonAsync<List<IssueDto>>() ?? [];
     }
 
+    public async Task<List<IssueDto>> GetUpcomingIssuesAsync()
+    {
+        var response = await http.GetAsync("api/issues/upcoming");
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<IssueDto>>() ?? [];
+    }
+
     public async Task<IssueDto?> GetIssueByIdAsync(Guid id)
     {
         var response = await http.GetAsync($"api/issues/{id}");

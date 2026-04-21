@@ -1,4 +1,5 @@
 ﻿@page "/groups/{groupId:guid}/issues"
+@using DotTracked.Client.Components
 @using DotTracked.Client.Components.Dialogs.Issues
 @using DotTracked.Client.Services
 @using DotTracked.Shared.Constants
@@ -15,7 +16,7 @@
 <MudContainer Class="mt-8">
     @if (_issues == null)
     {
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+        <CenteredSpinner/>
     }
     else if (_issues.Count == 0)
     {

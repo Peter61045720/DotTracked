@@ -1,22 +1,285 @@
 ﻿@page "/"
+@using DotTracked.Client.Components
+@using DotTracked.Client.Components.Dialogs.Absences
+@using DotTracked.Client.Components.Dialogs.Groups
+@using DotTracked.Client.Components.Dialogs.Issues
+@using DotTracked.Client.Constants
+@using DotTracked.Client.Services
 @using DotTracked.Shared.Constants
+@using DotTracked.Shared.DTOs
+@using DotTracked.Shared.Enums
 @using Microsoft.AspNetCore.Authorization
 
 @attribute [Authorize]
 
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IIssueService IssueService
+@inject IGroupService GroupService
+@inject IAbsenceService AbsenceService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
 <PageTitle>Home</PageTitle>
 
-<MudContainer>
+<MudContainer Class="mt-8">
     <AuthorizeView>
         @if (context.User.IsInRole(Roles.Admin))
         {
-            <MudText>Signed in as an Admin</MudText>
+            <MudStack Row Spacing="6" Justify="Justify.Center">
+                <MudPaper @onclick="@(() => NavigateToPage("admin/users"))" Class="cursor-pointer d-inline-block">
+                    <MudStack Row AlignItems="AlignItems.Start" Class="pa-4">
+                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Class="pt-1"/>
+                        <MudStack>
+                            <MudText Typo="Typo.h6" Color="Color.Primary">User Management</MudText>
+                            <MudText>View user profiles or <MudText Color="Color.Error" Inline="true">delete</MudText> accounts.</MudText>
+                        </MudStack>
+                    </MudStack>
+                </MudPaper>
+                <MudPaper @onclick="@(() => NavigateToPage("admin/groups"))" Class="cursor-pointer d-inline-block">
+                    <MudStack Row AlignItems="AlignItems.Start" Class="pa-4">
+                        <MudIcon Icon="@Icons.Material.Filled.Groups" Size="Size.Large" Class="pt-1"/>
+                        <MudStack>
+                            <MudText Typo="Typo.h6" Color="Color.Primary">Group Management</MudText>
+                            <MudText>Manage groups, memberships, and moderator roles.</MudText>
+                        </MudStack>
+                    </MudStack>
+                </MudPaper>
+            </MudStack>
         }
         else
         {
-            <MudText>Signed in as a User</MudText>
+            <MudGrid Spacing="6">
+                <MudItem xs="4">
+                    <MudCard Elevation="4">
+                        <MudCardHeader Class="mud-theme-primary px-2 py-1">
+                            <CardHeaderContent>
+                                <MudButton OnClick="@(() => NavigateToPage("issues"))" EndIcon="@Icons.Material.Filled.ChevronRight" Style="color: white;">Issues</MudButton>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+
+                        <MudCardContent Class="px-2 pt-4 pb-0">
+                            @if (_issues == null)
+                            {
+                                <CenteredSpinner/>
+                            }
+                            else if (_issues.Count == 0)
+                            {
+                                <MudText Class="mx-2">No issues available</MudText>
+                            }
+                            else
+                            {
+                                <MudList T="string">
+                                    @foreach (var issue in _issues)
+                                    {
+                                        <MudListItem OnClick="@(() => NavigateToPage($"issues/{issue.Id}"))">
+                                            <MudStack Row AlignItems="AlignItems.Center">
+                                                <MudIcon Icon="@Icons.Material.Filled.Circle" Color="@GetColor(issue.Priority)" Style="height: 12px; width: 12px;"/>
+                                                <MudText>@issue.Title</MudText>
+                                                <MudSpacer/>
+                                                <MudText Typo="Typo.body2">@DateOnly.FromDateTime(issue.DueDate)</MudText>
+                                                <MudIcon Icon="@GetIcon(issue.Status)"/>
+                                            </MudStack>
+                                        </MudListItem>
+                                        <MudDivider/>
+                                    }
+                                </MudList>
+                            }
+                        </MudCardContent>
+
+                        <MudCardActions Class="justify-end px-4 py-1">
+                            <MudButton OnClick="CreateIssueAsync" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary">Add</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudCard Elevation="4">
+                        <MudCardHeader Class="mud-theme-secondary px-2 py-1">
+                            <CardHeaderContent>
+                                <MudButton OnClick="@(() => NavigateToPage("groups"))" EndIcon="@Icons.Material.Filled.ChevronRight" Style="color: white;">Groups</MudButton>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+
+                        <MudCardContent Class="px-2 pt-4 pb-0">
+                            @if (_groups == null)
+                            {
+                                <CenteredSpinner/>
+                            }
+                            else if (_groups.Count == 0)
+                            {
+                                <MudText Class="mx-2">No groups available</MudText>
+                            }
+                            else
+                            {
+                                <MudList T="string">
+                                    @foreach (var group in _groups)
+                                    {
+                                        <MudListItem OnClick="@(() => NavigateToPage($"groups/{group.Id}"))">
+                                            <MudStack Row AlignItems="AlignItems.Center">
+                                                <MudText>@group.Name</MudText>
+                                                <MudSpacer/>
+                                                <MudIcon Icon="@Icons.Material.Filled.ChevronRight"/>
+                                            </MudStack>
+                                        </MudListItem>
+                                        <MudDivider/>
+                                    }
+                                </MudList>
+                            }
+                        </MudCardContent>
+
+                        <MudCardActions Class="justify-end px-4 py-1">
+                            <MudButton OnClick="CreateGroupAsync" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary">Add</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudCard Elevation="4">
+                        <MudCardHeader Class="teal px-2 py-1">
+                            <CardHeaderContent>
+                                <MudButton OnClick="@(() => NavigateToPage("absences"))" EndIcon="@Icons.Material.Filled.ChevronRight" Style="color: white;">Absences</MudButton>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+
+                        <MudCardContent Class="px-2 pt-4 pb-0">
+                            @if (_absences == null)
+                            {
+                                <CenteredSpinner/>
+                            }
+                            else if (_absences.Count == 0)
+                            {
+                                <MudText Class="mx-2">No absences available</MudText>
+                            }
+                            else
+                            {
+                                <MudList T="string">
+                                    @foreach (var absence in _absences)
+                                    {
+                                        <MudListItem OnClick="@(() => NavigateToPage($"absences/{absence.Id}"))">
+                                            <MudStack Row AlignItems="AlignItems.Center">
+                                                <MudText>@absence.Type</MudText>
+                                                <MudText>(@Pluralize((absence.EndDate - absence.StartDate).Days + 1, "day"))</MudText>
+                                                <MudSpacer/>
+                                                <MudText Typo="Typo.body2">@DateOnly.FromDateTime(absence.StartDate)</MudText>
+                                                <MudIcon Icon="@Icons.Material.Filled.ChevronRight"/>
+                                            </MudStack>
+                                        </MudListItem>
+                                        <MudDivider/>
+                                    }
+                                </MudList>
+                            }
+                        </MudCardContent>
+
+                        <MudCardActions Class="justify-end px-4 py-1">
+                            <MudButton OnClick="CreateAbsenceAsync" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary">Add</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
         }
     </AuthorizeView>
 </MudContainer>
 
-@code { }
+@code {
+    private List<IssueDto>? _issues;
+    private List<GroupNameDto>? _groups;
+    private List<AbsenceDto>? _absences;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthStateProvider.GetAuthenticationStateAsync()).User;
+
+        if (user.Identity?.IsAuthenticated == true && user.IsInRole(Roles.AppUser))
+        {
+            var issuesTask = IssueService.GetUpcomingIssuesAsync();
+            var groupsTask = GroupService.GetGroupsPreviewAsync();
+            var absencesTask = AbsenceService.GetUpcomingAbsencesAsync();
+
+            await foreach (var completedTask in Task.WhenEach(issuesTask, groupsTask, absencesTask))
+            {
+                if (completedTask == issuesTask)
+                {
+                    _issues = issuesTask.Result;
+                }
+                else if (completedTask == groupsTask)
+                {
+                    _groups = groupsTask.Result;
+                }
+                else if (completedTask == absencesTask)
+                {
+                    _absences = absencesTask.Result;
+                }
+            }
+        }
+    }
+
+    public async Task CreateIssueAsync()
+    {
+        var dialog = await DialogService.ShowAsync<CreateIssueDialog>("Create Issue", DialogSettings.Small);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is IssueDto newIssueDto)
+        {
+            newIssueDto = await IssueService.CreateIssueAsync(newIssueDto);
+            _issues?.Add(newIssueDto);
+            Snackbar.Add("Issue created successfully", Severity.Success);
+        }
+    }
+
+    public async Task CreateGroupAsync()
+    {
+        var dialog = await DialogService.ShowAsync<CreateGroupDialog>("Create Group", DialogSettings.ExtraSmall);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is GroupDto newGroupDto)
+        {
+            newGroupDto = await GroupService.CreateGroupAsync(newGroupDto);
+            _groups?.Add(new GroupNameDto { Id = newGroupDto.Id, Name = newGroupDto.Name });
+            Snackbar.Add("Group created successfully", Severity.Success);
+        }
+    }
+
+    public async Task CreateAbsenceAsync()
+    {
+        var dialog = await DialogService.ShowAsync<CreateAbsenceDialog>("Create Absence", DialogSettings.Small);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is AbsenceDto newAbsenceDto)
+        {
+            newAbsenceDto = await AbsenceService.CreateAbsenceAsync(newAbsenceDto);
+            _absences?.Add(newAbsenceDto);
+            Snackbar.Add("Absence created successfully", Severity.Success);
+        }
+    }
+
+    public void NavigateToPage(string path)
+    {
+        Navigation.NavigateTo(path);
+    }
+
+    private static Color GetColor(Priority priority)
+    {
+        return priority switch
+        {
+            Priority.High => Color.Error,
+            Priority.Medium => Color.Warning,
+            _ => Color.Success
+        };
+    }
+
+    private static string GetIcon(Status status)
+    {
+        return status switch
+        {
+            Status.InProgress => Icons.Material.Outlined.PlayCircle,
+            Status.Done => Icons.Material.Filled.Check,
+            Status.DidNotComplete => Icons.Material.Filled.Close,
+            _ => Icons.Material.Filled.HourglassEmpty
+        };
+    }
+
+    private static string Pluralize(int count, string word)
+    {
+        return $"{count} {word}{(count > 1 ? "s" : "")}";
+    }
+
+}

@@ -1,4 +1,5 @@
 ﻿@page "/groups/{groupId:guid}/issues/{issueId:guid}"
+@using DotTracked.Client.Components
 @using DotTracked.Client.Components.Dialogs
 @using DotTracked.Client.Components.Dialogs.Assignments
 @using DotTracked.Client.Components.Dialogs.Groups
@@ -19,7 +20,7 @@
 <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
     @if (_issueDto == null || _groupDto == null)
     {
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+        <CenteredSpinner/>
     }
     else
     {
@@ -80,7 +81,7 @@
 
             @if (_assignees == null)
             {
-                <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+                <CenteredSpinner/>
             }
             else if (_assignees.Count == 0)
             {

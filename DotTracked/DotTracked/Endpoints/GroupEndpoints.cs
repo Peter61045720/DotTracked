@@ -13,6 +13,7 @@ public static class GroupEndpoints
         var group = app.MapGroup("/api/groups").RequireAuthorization();
 
         group.MapGet("/", GetAllGroups);
+        group.MapGet("/preview", GetGroupsPreview);
         group.MapGet("/{id:guid}", GetGroupById);
         group.MapPost("/", CreateGroup);
         group.MapPut("/{id:guid}", UpdateGroup);
@@ -59,6 +60,29 @@ public static class GroupEndpoints
                 IsModerator = gm.IsModerator,
                 JoinedAt = gm.JoinedAt,
                 MemberCount = gm.Group.Members.Count
+            })
+            .ToListAsync();
+
+        return TypedResults.Ok(groups);
+    }
+
+    private static async Task<IResult> GetGroupsPreview(ApplicationDbContext db, ClaimsPrincipal user)
+    {
+        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (userId is null)
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        var groups = await db.GroupMembers
+            .Where(gm => gm.UserId == userId)
+            .OrderBy(gm => gm.Group.Name)
+            .Take(5)
+            .Select(gm => new GroupNameDto
+            {
+                Id = gm.GroupId,
+                Name = gm.Group.Name
             })
             .ToListAsync();
 

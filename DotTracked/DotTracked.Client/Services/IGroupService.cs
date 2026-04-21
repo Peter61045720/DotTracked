@@ -5,6 +5,7 @@ namespace DotTracked.Client.Services;
 public interface IGroupService
 {
     Task<List<GroupDto>> GetGroupsAsync();
+    Task<List<GroupNameDto>> GetGroupsPreviewAsync();
     Task<GroupDto?> GetGroupByIdAsync(Guid id);
     Task<GroupDto> CreateGroupAsync(GroupDto groupDto);
     Task UpdateGroupAsync(Guid id, GroupDto groupDto);
