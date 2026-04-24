@@ -19,6 +19,8 @@ public class Issue
     public Guid? GroupId { get; set; }
     public Group? Group { get; set; }
 
+    public ICollection<WorkLog> WorkLogs { get; } = new List<WorkLog>();
+
     public ICollection<ApplicationUser> Assignees { get; } = new List<ApplicationUser>();
     public ICollection<Assignment> Assignments { get; } = new List<Assignment>();
 }

@@ -1,0 +1,75 @@
+﻿@using DotTracked.Shared.DTOs
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Work Log Details</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudGrid Spacing="4">
+            <MudItem xs="6">
+                <MudDatePicker Date="_date" Label="Date" Variant="Variant.Outlined" ReadOnly="true"/>
+            </MudItem>
+            <MudItem xs="6">
+                <MudTimePicker Time="_time" Label="Time" Variant="Variant.Outlined" ReadOnly="true"/>
+            </MudItem>
+
+            <MudItem xs="4">
+                <MudNumericField Value="_loggedTime.Hours" Label="Hours" Variant="Variant.Outlined" ReadOnly="true"/>
+            </MudItem>
+            <MudItem xs="4">
+                <MudNumericField Value="_loggedTime.Minutes" Label="Minutes" Variant="Variant.Outlined" ReadOnly="true"/>
+            </MudItem>
+            <MudItem xs="4">
+                <MudNumericField Value="_loggedTime.Seconds" Label="Seconds" Variant="Variant.Outlined" ReadOnly="true"/>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudText Typo="Typo.h6" Class="mb-4">Description</MudText>
+                <MudText>@WorkLogDto.Description</MudText>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudDivider/>
+            </MudItem>
+
+            <MudItem xs="6">
+                <MudText Typo="Typo.body2">Created At: @WorkLogDto.CreatedAt</MudText>
+            </MudItem>
+            <MudItem xs="6">
+                <MudText Typo="Typo.body2">Updated At: @WorkLogDto.UpdatedAt</MudText>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Close" Color="Color.Primary" Variant="Variant.Filled">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public WorkLogDto WorkLogDto { get; set; } = new();
+
+    private DateTime? _date;
+
+    private TimeSpan? _time;
+
+    private TimeSpan _loggedTime;
+
+    protected override void OnInitialized()
+    {
+        _date = WorkLogDto.DateOfLogging.Date;
+        _time = WorkLogDto.DateOfLogging.TimeOfDay;
+        _loggedTime = TimeSpan.FromSeconds(WorkLogDto.TimeSpentSeconds);
+    }
+
+    public void Close()
+    {
+        MudDialog.Close();
+    }
+
+}

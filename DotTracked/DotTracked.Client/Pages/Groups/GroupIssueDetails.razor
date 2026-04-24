@@ -4,6 +4,8 @@
 @using DotTracked.Client.Components.Dialogs.Assignments
 @using DotTracked.Client.Components.Dialogs.Groups
 @using DotTracked.Client.Components.Dialogs.Issues
+@using DotTracked.Client.Components.Dialogs.WorkLogs
+@using DotTracked.Client.Constants
 @using DotTracked.Client.Services
 @using DotTracked.Shared.Constants
 @using DotTracked.Shared.DTOs
@@ -15,6 +17,7 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IGroupService GroupService
+@inject IWorkLogService WorkLogService
 @inject IDialogService DialogService
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
@@ -29,85 +32,135 @@
         <MudText Typo="Typo.h5" Class="my-6">Issue Details</MudText>
 
         <MudPaper Elevation="4" Class="pa-4">
-            <MudGrid Spacing="6">
-                <MudItem xs="6">
-                    <MudText>Title:</MudText>
-                </MudItem>
-                <MudItem xs="6">
-                    <MudText>@_issueDto.Title</MudText>
-                </MudItem>
+            <MudTabs Centered="true" Rounded="true" Outlined="true" PanelClass="pt-6">
+                <MudTabPanel Text="Info" Icon="@Icons.Material.Filled.Article">
+                    <MudGrid Spacing="6">
+                        <MudItem xs="6">
+                            <MudText>Title:</MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText>@_issueDto.Title</MudText>
+                        </MudItem>
 
-                <MudItem xs="6">
-                    <MudText>Description:</MudText>
-                </MudItem>
-                <MudItem xs="6">
-                    <MudText>@_issueDto.Description</MudText>
-                </MudItem>
+                        <MudItem xs="6">
+                            <MudText>Description:</MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText>@_issueDto.Description</MudText>
+                        </MudItem>
 
-                <MudItem xs="6">
-                    <MudText>Priority:</MudText>
-                </MudItem>
-                <MudItem xs="6">
-                    <MudChip T="string" Color="GetPriorityColor(_issueDto.Priority)" Class="ml-n3">
-                        @_issueDto.Priority.ToString()
-                    </MudChip>
-                </MudItem>
+                        <MudItem xs="6">
+                            <MudText>Priority:</MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudChip T="string" Color="GetPriorityColor(_issueDto.Priority)" Class="ml-n3">
+                                @_issueDto.Priority.ToString()
+                            </MudChip>
+                        </MudItem>
 
-                <MudItem xs="6">
-                    <MudText>Status:</MudText>
-                </MudItem>
-                <MudItem xs="6">
-                    <MudChip T="string" Color="GetStatusColor(_issueDto.Status)" Class="ml-n3">
-                        @_issueDto.Status.ToString()
-                    </MudChip>
-                </MudItem>
+                        <MudItem xs="6">
+                            <MudText>Status:</MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudChip T="string" Color="GetStatusColor(_issueDto.Status)" Class="ml-n3">
+                                @_issueDto.Status.ToString()
+                            </MudChip>
+                        </MudItem>
 
-                <MudItem xs="6">
-                    <MudText>Due Date:</MudText>
-                </MudItem>
-                <MudItem xs="6">
-                    <MudText>@DateOnly.FromDateTime(_issueDto.DueDate)</MudText>
-                </MudItem>
-            </MudGrid>
-        </MudPaper>
-
-        <MudText Typo="Typo.h5" Class="my-6">Issue Assignees</MudText>
-
-        <MudPaper Elevation="4" Class="pa-4">
-            @if (_groupDto.IsModerator)
-            {
-                <MudButton OnClick="CreateAssignmentAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Assignment" Color="Color.Primary" Class="mb-4">Assign to a Member</MudButton>
-            }
-
-            @if (_assignees == null)
-            {
-                <CenteredSpinner/>
-            }
-            else if (_assignees.Count == 0)
-            {
-                <MudAlert Severity="Severity.Info">No Assignees available for this Issue</MudAlert>
-            }
-            else
-            {
-                <MudList T="string">
-                    @foreach (var assignee in _assignees)
+                        <MudItem xs="6">
+                            <MudText>Due Date:</MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText>@DateOnly.FromDateTime(_issueDto.DueDate)</MudText>
+                        </MudItem>
+                    </MudGrid>
+                </MudTabPanel>
+                <MudTabPanel Text="Assignees" Icon="@Icons.Material.Filled.AssignmentInd">
+                    @if (_groupDto.IsModerator)
                     {
-                        <MudListItem OnClick="() => OpenGroupMemberDetailsDialogAsync(assignee)">
-                            <MudStack Row AlignItems="AlignItems.Center">
-                                <MudAvatar Color="Color.Primary">@($"{char.ToUpper(assignee.FirstName[0])}{char.ToUpper(assignee.LastName[0])}")</MudAvatar>
-                                <b>@($"{assignee.FirstName} {assignee.LastName}")</b>
-                                <MudText>(@assignee.Email)</MudText>
-                                <MudSpacer/>
-
-                                @if (_groupDto.IsModerator)
-                                {
-                                    <MudIconButton OnClick="() => DeleteAssignmentAsync(assignee)" Icon="@Icons.Material.Filled.PersonRemove" Color="Color.Error"/>
-                                }
-                            </MudStack>
-                        </MudListItem>
+                        <MudButton OnClick="CreateAssignmentAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Assignment" Color="Color.Primary" Class="mb-4">Assign to a Member</MudButton>
                     }
-                </MudList>
-            }
+
+                    @if (_assignees == null)
+                    {
+                        <CenteredSpinner/>
+                    }
+                    else if (_assignees.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info">No Assignees available for this Issue</MudAlert>
+                    }
+                    else
+                    {
+                        <MudList T="string">
+                            @foreach (var assignee in _assignees)
+                            {
+                                <MudListItem OnClick="() => OpenGroupMemberDetailsDialogAsync(assignee)">
+                                    <MudStack Row AlignItems="AlignItems.Center">
+                                        <MudAvatar Color="Color.Primary">@($"{char.ToUpper(assignee.FirstName[0])}{char.ToUpper(assignee.LastName[0])}")</MudAvatar>
+                                        <b>@($"{assignee.FirstName} {assignee.LastName}")</b>
+                                        <MudText>(@assignee.Email)</MudText>
+                                        <MudSpacer/>
+
+                                        @if (_groupDto.IsModerator)
+                                        {
+                                            <MudIconButton OnClick="() => DeleteAssignmentAsync(assignee)" Icon="@Icons.Material.Filled.PersonRemove" Color="Color.Error"/>
+                                        }
+                                    </MudStack>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    }
+                </MudTabPanel>
+                <MudTabPanel Text="Work logs" Icon="@Icons.Material.Filled.AccessTime">
+                    @if (_workLogs == null)
+                    {
+                        <CenteredSpinner/>
+                    }
+                    else if (_workLogs.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mb-4">No work logs available</MudAlert>
+                        <MudButton OnClick="CreateWorkLogAsync" StartIcon="@Icons.Material.Filled.MoreTime" Color="Color.Primary" Variant="Variant.Filled">Log work</MudButton>
+                    }
+                    else
+                    {
+                        <MudStack Row AlignItems="AlignItems.Center">
+                            <MudButton OnClick="CreateWorkLogAsync" StartIcon="@Icons.Material.Filled.MoreTime" Color="Color.Primary" Variant="Variant.Filled" Class="mb-4">Log work</MudButton>
+                            <MudSpacer/>
+                            <MudText>Total time logged: @_totalTime</MudText>
+                        </MudStack>
+
+                        <MudDivider/>
+
+                        <MudList T="string">
+                            @foreach (var workLog in _workLogs)
+                            {
+                                <MudListItem OnClick="@(() => OpenWorkLogDetailsDialogAsync(workLog))">
+                                    <MudStack Row AlignItems="AlignItems.Center">
+                                        @{
+                                            var loggedTime = GetTimeSpan(workLog.TimeSpentSeconds);
+                                        }
+
+                                        <MudText>@loggedTime.Hours hours</MudText>
+                                        <MudText>@loggedTime.Minutes minutes</MudText>
+                                        <MudSpacer/>
+                                        <MudText>@workLog.DateOfLogging</MudText>
+
+                                        @if (workLog.IsOwner)
+                                        {
+                                            <MudIconButton OnClick="@(() => UpdateWorkLogAsync(workLog))" Icon="@Icons.Material.Filled.Edit" Size="Size.Small"/>
+                                            <MudIconButton OnClick="@(() => DeleteWorkLogAsync(workLog))" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"/>
+                                        }
+                                    </MudStack>
+                                </MudListItem>
+                                <MudDivider/>
+                            }
+                        </MudList>
+                    }
+                </MudTabPanel>
+                <MudTabPanel Text="Comments" Icon="@Icons.Material.Filled.Chat">
+                    <MudText>No comments available</MudText>
+                </MudTabPanel>
+            </MudTabs>
         </MudPaper>
 
         @if (_groupDto.IsModerator)
@@ -142,11 +195,17 @@
 
     private List<UserDto>? _assignees;
 
+    private List<WorkLogDto>? _workLogs;
+
+    private TimeSpan _totalTime;
+
     protected override async Task OnInitializedAsync()
     {
         _groupDto = await GroupService.GetGroupByIdAsync(GroupId);
         _issueDto = await GroupService.GetGroupIssueByIdAsync(GroupId, IssueId);
         _assignees = await GroupService.GetIssueAssigneesAsync(GroupId, IssueId);
+        _workLogs = await WorkLogService.GetWorkLogsAsync(IssueId);
+        _totalTime = TimeSpan.FromSeconds(await WorkLogService.GetTotalLoggedTimeAsync(IssueId));
 
         if (_groupDto is null || _issueDto is null)
         {
@@ -283,6 +342,68 @@
         }
     }
 
+    public async Task OpenWorkLogDetailsDialogAsync(WorkLogDto workLogDto)
+    {
+        var parameters = new DialogParameters<WorkLogDetailsDialog>
+        {
+            { x => x.WorkLogDto, workLogDto }
+        };
+
+        await DialogService.ShowAsync<WorkLogDetailsDialog>("Work Log Details", parameters, DialogSettings.Small);
+    }
+
+    public async Task CreateWorkLogAsync()
+    {
+        var dialog = await DialogService.ShowAsync<CreateWorkLogDialog>("Create Work Log", DialogSettings.Small);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is WorkLogDto newWorkLogDto)
+        {
+            newWorkLogDto = await WorkLogService.CreateWorkLogAsync(IssueId, newWorkLogDto);
+            _workLogs?.Add(newWorkLogDto);
+            _totalTime = TimeSpan.FromSeconds(_workLogs!.Sum(w => w.TimeSpentSeconds));
+            Snackbar.Add("Work log created successfully", Severity.Success);
+        }
+    }
+
+    public async Task UpdateWorkLogAsync(WorkLogDto workLogDto)
+    {
+        var parameters = new DialogParameters<UpdateWorkLogDialog>
+        {
+            { x => x.WorkLogDto, workLogDto }
+        };
+
+        var dialog = await DialogService.ShowAsync<UpdateWorkLogDialog>("Update Work Log", parameters, DialogSettings.Small);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is WorkLogDto updatedWorkLogDto)
+        {
+            await WorkLogService.UpdateWorkLogAsync(IssueId, workLogDto.Id, updatedWorkLogDto);
+            _totalTime = TimeSpan.FromSeconds(_workLogs!.Sum(w => w.TimeSpentSeconds));
+            Snackbar.Add("Work log updated successfully", Severity.Success);
+        }
+    }
+
+    public async Task DeleteWorkLogAsync(WorkLogDto workLogDto)
+    {
+        var parameters = new DialogParameters<ConfirmDeleteDialog>
+        {
+            { x => x.ItemType, "Work Log" },
+            { x => x.ItemName, $"logged work at {workLogDto.DateOfLogging}" }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Delete Work Log", parameters, DialogSettings.ExtraSmall);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await WorkLogService.DeleteWorkLogAsync(IssueId, workLogDto.Id);
+            _workLogs?.Remove(workLogDto);
+            _totalTime = TimeSpan.FromSeconds(_workLogs!.Sum(w => w.TimeSpentSeconds));
+            Snackbar.Add("Work log deleted successfully", Severity.Success);
+        }
+    }
+
     private void NavigateBack()
     {
         Navigation.NavigateTo($"/groups/{GroupId}/issues");
@@ -307,6 +428,11 @@
             Status.DidNotComplete => Color.Error,
             _ => Color.Default
         };
+    }
+
+    private static TimeSpan GetTimeSpan(int seconds)
+    {
+        return TimeSpan.FromSeconds(seconds);
     }
 
 }

@@ -81,6 +81,7 @@ public class Program
         app.MapAdditionalIdentityEndpoints();
         app.MapUserEndpoints();
         app.MapIssueEndpoints();
+        app.MapWorkLogEndpoints();
         app.MapAbsenceEndpoints();
         app.MapGroupEndpoints();
         app.MapAdminEndpoints();

@@ -8,6 +8,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     : IdentityDbContext<ApplicationUser>(options)
 {
     public DbSet<Issue> Issues { get; set; }
+    public DbSet<WorkLog> WorkLogs { get; set; }
     public DbSet<Absence> Absences { get; set; }
     public DbSet<Group> Groups { get; set; }
     public DbSet<GroupMember> GroupMembers { get; set; }
@@ -31,6 +32,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 r => r.HasOne<ApplicationUser>(e => e.User).WithMany(e => e.Assignments).HasForeignKey(e => e.UserId),
                 l => l.HasOne<Issue>(e => e.Issue).WithMany(e => e.Assignments).HasForeignKey(e => e.IssueId),
                 j => j.HasKey(e => new { e.IssueId, e.UserId }));
+
+        modelBuilder.Entity<WorkLog>(b =>
+        {
+            b.Property(w => w.Description).HasMaxLength(400);
+
+            b.HasOne(w => w.User).WithMany(u => u.WorkLogs).HasForeignKey(w => w.UserId).IsRequired();
+            b.HasOne(w => w.Issue).WithMany(i => i.WorkLogs).HasForeignKey(w => w.IssueId).IsRequired();
+        });
 
         modelBuilder.Entity<Absence>().Property(a => a.Description).HasMaxLength(200);
         modelBuilder.Entity<Absence>()
