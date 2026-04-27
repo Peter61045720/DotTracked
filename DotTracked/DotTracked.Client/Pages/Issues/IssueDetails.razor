@@ -1,6 +1,8 @@
 ﻿@page "/issues/{id:guid}"
+@using System.ComponentModel.DataAnnotations
 @using DotTracked.Client.Components
 @using DotTracked.Client.Components.Dialogs
+@using DotTracked.Client.Components.Dialogs.Comments
 @using DotTracked.Client.Components.Dialogs.WorkLogs
 @using DotTracked.Client.Constants
 @using DotTracked.Client.Services
@@ -15,6 +17,7 @@
 @inject ISnackbar Snackbar
 @inject IIssueService IssueService
 @inject IWorkLogService WorkLogService
+@inject ICommentService CommentService
 @inject IDialogService DialogService
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
@@ -119,7 +122,59 @@
                     }
                 </MudTabPanel>
                 <MudTabPanel Text="Comments" Icon="@Icons.Material.Filled.Chat">
-                    <MudText>No comments available</MudText>
+                    <MudText Align="Align.Right" Class="mb-4">Number of comments: @_commentCount</MudText>
+
+                    <EditForm Model="@_input" OnValidSubmit="CreateCommentAsync">
+                        <DataAnnotationsValidator/>
+
+                        <MudTextField @bind-Value="_input.Comment" For="@(() => _input.Comment)"
+                                      Label="Comment" Placeholder="Type here..." Lines="3" MaxLines="8" Variant="Variant.Outlined"/>
+
+                        <MudStack Row Justify="Justify.FlexEnd">
+                            <MudButton ButtonType="ButtonType.Submit" EndIcon="@Icons.Material.Filled.Send" Color="Color.Primary" Variant="Variant.Filled" Class="my-4">Send</MudButton>
+                        </MudStack>
+                    </EditForm>
+
+                    @if (_comments == null)
+                    {
+                        <CenteredSpinner/>
+                    }
+                    else if (_comments.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mb-4">No comments available</MudAlert>
+                    }
+                    else
+                    {
+                        <MudDivider/>
+
+                        <MudList T="string">
+                            @foreach (var comment in _comments)
+                            {
+                                <MudListItem>
+                                    <MudStack Row AlignItems="AlignItems.Start">
+                                        <MudAvatar Color="Color.Primary">@comment.AvatarText</MudAvatar>
+                                        <MudStack Style="width: 100%;">
+                                            <MudStack Row AlignItems="AlignItems.Center">
+                                                <MudText Color="Color.Primary">@comment.CreatorEmail</MudText>
+                                                <MudText Typo="Typo.body2">@comment.CreatedAt</MudText>
+                                                <MudSpacer/>
+
+                                                @if (comment.IsOwner)
+                                                {
+                                                    <MudIconButton OnClick="@(() => UpdateCommentAsync(comment))" Icon="@Icons.Material.Filled.Edit" Size="Size.Small"/>
+                                                    <MudIconButton OnClick="@(() => DeleteCommentAsync(comment))" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"/>
+                                                }
+                                            </MudStack>
+
+                                            <MudSpacer/>
+
+                                            <MudText Align="Align.Justify">@comment.Content</MudText>
+                                        </MudStack>
+                                    </MudStack>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    }
                 </MudTabPanel>
             </MudTabs>
         </MudPaper>
@@ -135,13 +190,21 @@
 
     private List<WorkLogDto>? _workLogs;
 
+    private List<CommentDto>? _comments;
+
     private TimeSpan _totalTime;
+
+    private InputModel _input = new();
+
+    private int _commentCount;
 
     protected override async Task OnInitializedAsync()
     {
         _issueDto = await IssueService.GetIssueByIdAsync(Id);
         _workLogs = await WorkLogService.GetWorkLogsAsync(Id);
+        _comments = await CommentService.GetCommentsAsync(Id);
         _totalTime = TimeSpan.FromSeconds(await WorkLogService.GetTotalLoggedTimeAsync(Id));
+        _commentCount = await CommentService.GetCommentCountAsync(Id);
     }
 
     public async Task OpenWorkLogDetailsDialogAsync(WorkLogDto workLogDto)
@@ -206,6 +269,52 @@
         }
     }
 
+    public async Task CreateCommentAsync()
+    {
+        var newComment = await CommentService.CreateCommentAsync(Id, new CommentDto { Content = _input.Comment });
+        _comments?.Add(newComment);
+        _commentCount++;
+        _input = new InputModel();
+        Snackbar.Add("Comment created successfully", Severity.Success);
+    }
+
+    public async Task UpdateCommentAsync(CommentDto commentDto)
+    {
+        var parameters = new DialogParameters<UpdateCommentDialog>
+        {
+            { x => x.CommentDto, commentDto }
+        };
+
+        var dialog = await DialogService.ShowAsync<UpdateCommentDialog>("Update Comment", parameters, DialogSettings.Small);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is CommentDto updatedCommentDto)
+        {
+            await CommentService.UpdateCommentAsync(Id, commentDto.Id, updatedCommentDto);
+            Snackbar.Add("Comment updated successfully", Severity.Success);
+        }
+    }
+
+    public async Task DeleteCommentAsync(CommentDto commentDto)
+    {
+        var parameters = new DialogParameters<ConfirmDeleteDialog>
+        {
+            { x => x.ItemType, "Comment" },
+            { x => x.ItemName, $"comment written by {commentDto.CreatorEmail} on {commentDto.CreatedAt}" }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Delete Comment", parameters, DialogSettings.ExtraSmall);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await CommentService.DeleteCommentAsync(Id, commentDto.Id);
+            _comments?.Remove(commentDto);
+            _commentCount--;
+            Snackbar.Add("Comment deleted successfully", Severity.Success);
+        }
+    }
+
     private void NavigateBack()
     {
         Navigation.NavigateTo("issues");
@@ -235,6 +344,13 @@
     private static TimeSpan GetTimeSpan(int seconds)
     {
         return TimeSpan.FromSeconds(seconds);
+    }
+
+    public class InputModel
+    {
+        [Required]
+        [StringLength(1000, ErrorMessage = "Description length can't be more than 1000 characters.")]
+        public string Comment { get; set; }
     }
 
 }

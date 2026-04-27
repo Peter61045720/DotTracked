@@ -82,6 +82,7 @@ public class Program
         app.MapUserEndpoints();
         app.MapIssueEndpoints();
         app.MapWorkLogEndpoints();
+        app.MapCommentEndpoints();
         app.MapAbsenceEndpoints();
         app.MapGroupEndpoints();
         app.MapAdminEndpoints();

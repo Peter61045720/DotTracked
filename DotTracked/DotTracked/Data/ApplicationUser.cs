@@ -15,6 +15,8 @@ public class ApplicationUser : IdentityUser
 
     public ICollection<WorkLog> WorkLogs { get; } = new List<WorkLog>();
 
+    public ICollection<Comment> Comments { get; } = new List<Comment>();
+
     public ICollection<Absence> Absences { get; } = new List<Absence>();
 
     public ICollection<Group> Groups { get; } = new List<Group>();

@@ -27,6 +27,7 @@ internal class Program
 
         builder.Services.AddScoped<IIssueService, IssueService>();
         builder.Services.AddScoped<IWorkLogService, WorkLogService>();
+        builder.Services.AddScoped<ICommentService, CommentService>();
         builder.Services.AddScoped<IAbsenceService, AbsenceService>();
         builder.Services.AddScoped<IGroupService, GroupService>();
         builder.Services.AddScoped<IAdminService, AdminService>();

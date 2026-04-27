@@ -21,6 +21,8 @@ public class Issue
 
     public ICollection<WorkLog> WorkLogs { get; } = new List<WorkLog>();
 
+    public ICollection<Comment> Comments { get; } = new List<Comment>();
+
     public ICollection<ApplicationUser> Assignees { get; } = new List<ApplicationUser>();
     public ICollection<Assignment> Assignments { get; } = new List<Assignment>();
 }
