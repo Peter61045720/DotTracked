@@ -35,12 +35,20 @@ public static class AdminEndpoints
         members.MapDelete("/{userId}", DeleteGroupMember);
     }
 
-    private static async Task<IResult> GetAllUsers(ApplicationDbContext db, ClaimsPrincipal user)
+    private static async Task<IResult> GetAllUsers(ApplicationDbContext db)
     {
-        var currentUserId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        var adminRoleId = await db.Roles
+            .Where(r => r.Name == Roles.Admin)
+            .Select(r => r.Id)
+            .SingleOrDefaultAsync();
+
+        if (adminRoleId is null)
+        {
+            return TypedResults.InternalServerError();
+        }
 
         return TypedResults.Ok(await db.Users
-            .Where(u => u.Id != currentUserId)
+            .Where(u => !db.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == adminRoleId))
             .Select(u => new AdminUserDto
             {
                 Id = u.Id,
