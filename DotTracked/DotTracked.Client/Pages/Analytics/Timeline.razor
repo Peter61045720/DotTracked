@@ -1,0 +1,16 @@
+﻿@page "/analytics/timeline"
+@using DotTracked.Client.Layout
+@using DotTracked.Shared.Constants
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize(Roles = Roles.AppUser)]
+
+@layout AnalyticsLayout
+
+<MudContainer>
+    <MudText>Timeline page works!</MudText>
+</MudContainer>
+
+@code {
+
+}

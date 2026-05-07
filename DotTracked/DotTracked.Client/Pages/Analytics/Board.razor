@@ -1,0 +1,16 @@
+﻿@page "/analytics"
+@using DotTracked.Client.Layout
+@using DotTracked.Shared.Constants
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize(Roles = Roles.AppUser)]
+
+@layout AnalyticsLayout
+
+<MudContainer>
+    <MudText>Board page works!</MudText>
+</MudContainer>
+
+@code {
+
+}
