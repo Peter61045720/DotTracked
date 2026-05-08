@@ -1,16 +1,146 @@
 ﻿@page "/analytics"
+@using DotTracked.Client.Components
+@using DotTracked.Client.Components.Analytics
+@using DotTracked.Client.Constants
 @using DotTracked.Client.Layout
+@using DotTracked.Client.Services
 @using DotTracked.Shared.Constants
+@using DotTracked.Shared.DTOs
+@using DotTracked.Shared.Enums
 @using Microsoft.AspNetCore.Authorization
 
 @attribute [Authorize(Roles = Roles.AppUser)]
 
 @layout AnalyticsLayout
 
+@inject IGroupService GroupService
+@inject IIssueService IssueService
+
 <MudContainer>
-    <MudText>Board page works!</MudText>
+    <MudStack AlignItems="AlignItems.Center">
+        <div style="width: 40%;">
+            <MudText Typo="Typo.h5" Align="Align.Center">Kanban board</MudText>
+
+            <MudText Class="mt-2">Select Issue type:</MudText>
+
+            <MudToggleGroup T="IssueCategory?" Value="_selectedCategory" ValueChanged="OnCategoryChanged" Color="Color.Secondary">
+                <MudToggleItem T="IssueCategory?" Value="IssueCategory.Personal" Text="Personal"/>
+                <MudToggleItem T="IssueCategory?" Value="IssueCategory.Group" Text="Group"/>
+            </MudToggleGroup>
+
+            @if (_selectedCategory == IssueCategory.Group)
+            {
+                @if (_groups == null)
+                {
+                    <CenteredSpinner/>
+                }
+                else if (_groups.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Warning" Class="mt-4">No Groups available</MudAlert>
+                }
+                else
+                {
+                    <MudSelect T="GroupDto" Value="_selectedGroup" ValueChanged="OnGroupChanged" Label="Group" Placeholder="Select a Group" Variant="Variant.Outlined" Class="my-4">
+                        @foreach (var group in _groups)
+                        {
+                            <MudSelectItem Value="group">@group.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+            }
+        </div>
+    </MudStack>
+
+    @if (_issues == null)
+    {
+        @switch (_selectedCategory)
+        {
+            case null:
+                <MudAlert Severity="Severity.Info" Class="mt-4">Please select an Issue type to view the Kanban board</MudAlert>
+                break;
+            case IssueCategory.Group:
+                <MudAlert Severity="Severity.Info">Please select a Group to view the Kanban board</MudAlert>
+                break;
+            default:
+                <CenteredSpinner/>
+                break;
+        }
+    }
+    else if (_issues.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Class="mt-4">No Issues found for this selection</MudAlert>
+    }
+    else
+    {
+        <MudGrid Class="mt-8">
+            <MudItem xs="12" sm="6" md="3">
+                <KanbanColumn
+                    Issues="_issues.Where(i => i.Status == Status.DidNotComplete)"
+                    Title="Did Not Complete"
+                    HeaderColor="@KanbanColors.DidNotComplete"
+                    Category="_selectedCategory"
+                    GroupId="_selectedGroup?.Id"/>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <KanbanColumn
+                    Issues="_issues.Where(i => i.Status == Status.NotStarted)"
+                    Title="Not Started"
+                    HeaderColor="@KanbanColors.NotStarted"
+                    Category="_selectedCategory"
+                    GroupId="_selectedGroup?.Id"/>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <KanbanColumn
+                    Issues="_issues.Where(i => i.Status == Status.InProgress)"
+                    Title="In Progress"
+                    HeaderColor="@KanbanColors.InProgress"
+                    Category="_selectedCategory"
+                    GroupId="_selectedGroup?.Id"/>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <KanbanColumn
+                    Issues="_issues.Where(i => i.Status == Status.Done)"
+                    Title="Done"
+                    HeaderColor="@KanbanColors.Done"
+                    Category="_selectedCategory"
+                    GroupId="_selectedGroup?.Id"/>
+            </MudItem>
+        </MudGrid>
+    }
 </MudContainer>
 
 @code {
+    private List<GroupDto>? _groups;
+    private List<IssueDto>? _issues;
+    private IssueCategory? _selectedCategory;
+    private GroupDto? _selectedGroup;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _groups = await GroupService.GetGroupsAsync();
+    }
+
+    public async Task OnCategoryChanged(IssueCategory? newValue)
+    {
+        _selectedCategory = newValue;
+        _issues = null;
+        _selectedGroup = null;
+
+        if (_selectedCategory == IssueCategory.Personal)
+        {
+            _issues = await IssueService.GetIssuesAsync();
+        }
+    }
+
+    public async Task OnGroupChanged(GroupDto groupDto)
+    {
+        _selectedGroup = groupDto;
+        _issues = null;
+
+        if (_selectedGroup is not null)
+        {
+            _issues = await GroupService.GetGroupIssuesAsync(_selectedGroup.Id);
+        }
+    }
 
 }

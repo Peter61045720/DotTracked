@@ -1,0 +1,58 @@
+﻿@using DotTracked.Client.Constants
+@using DotTracked.Shared.DTOs
+@using DotTracked.Shared.Enums
+@inject NavigationManager Navigation
+
+<MudCard Elevation="4">
+    <MudCardHeader Class="px-2 py-1" Style="@($"background-color: {HeaderColor};")">
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6" Style="color: white;">@Title</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+
+    <MudCardContent>
+        @if (Issues.Any())
+        {
+            <MudList T="string">
+                @foreach (var issue in Issues)
+                {
+                    <MudListItem OnClick="@(() => NavigateToIssue(issue.Id))">
+                        <MudStack AlignItems="AlignItems.Start">
+                            <MudText>@issue.Title</MudText>
+                            <MudText Typo="Typo.body2" Style="color: gray;">Due Date: @DateOnly.FromDateTime(issue.DueDate)</MudText>
+                        </MudStack>
+                    </MudListItem>
+                    <MudDivider/>
+                }
+            </MudList>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2">There are no Issues in this category</MudText>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+
+    [Parameter]
+    public IEnumerable<IssueDto> Issues { get; set; } = [];
+
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public string HeaderColor { get; set; } = KanbanColors.NotStarted;
+
+    [Parameter]
+    public IssueCategory? Category { get; set; } = IssueCategory.Personal;
+
+    [Parameter]
+    public Guid? GroupId { get; set; }
+
+    private void NavigateToIssue(Guid issueId)
+    {
+        Navigation.NavigateTo(Category == IssueCategory.Personal ? $"issues/{issueId}" : $"groups/{GroupId}/issues/{issueId}");
+    }
+
+}
