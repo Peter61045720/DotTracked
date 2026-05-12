@@ -7,6 +7,16 @@ namespace DotTracked.Client.Services;
 
 public class WorkLogService(HttpClient http, ISnackbar snackbar) : IWorkLogService
 {
+    private static string BaseWorkLogPath => "api/worklogs";
+
+    public async Task<List<WorkLogDto>> GetUserWorkLogsAsync()
+    {
+        var response = await http.GetAsync(BaseWorkLogPath);
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<WorkLogDto>>() ?? [];
+    }
+
     public async Task<List<WorkLogDto>> GetWorkLogsAsync(Guid issueId)
     {
         var response = await http.GetAsync(WorkLogPath(issueId));

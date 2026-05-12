@@ -8,6 +8,7 @@
 @using DotTracked.Shared.Constants
 @using DotTracked.Shared.DTOs
 @using DotTracked.Shared.Enums
+@using Heron.MudCalendar
 @using Microsoft.AspNetCore.Authorization
 
 @attribute [Authorize]
@@ -174,6 +175,9 @@
                         </MudCardActions>
                     </MudCard>
                 </MudItem>
+                <MudItem xs="12" sm="12" md="12">
+                    <MudCalendar T="CalendarItem" Items="_calendarItems" DayStartTime="@(new TimeOnly(22, 0))" MonthCellMinHeight="120"/>
+                </MudItem>
             </MudGrid>
         }
     </AuthorizeView>
@@ -183,6 +187,7 @@
     private List<IssueDto>? _issues;
     private List<GroupNameDto>? _groups;
     private List<AbsenceDto>? _absences;
+    private readonly List<CalendarItem> _calendarItems = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -191,14 +196,24 @@
         if (user.Identity?.IsAuthenticated == true && user.IsInRole(Roles.AppUser))
         {
             var issuesTask = IssueService.GetUpcomingIssuesAsync();
+            var allIssuesTask = IssueService.GetIssuesAsync();
             var groupsTask = GroupService.GetGroupsPreviewAsync();
             var absencesTask = AbsenceService.GetUpcomingAbsencesAsync();
 
-            await foreach (var completedTask in Task.WhenEach(issuesTask, groupsTask, absencesTask))
+            await foreach (var completedTask in Task.WhenEach(issuesTask, allIssuesTask, groupsTask, absencesTask))
             {
                 if (completedTask == issuesTask)
                 {
                     _issues = issuesTask.Result;
+                }
+                else if (completedTask == allIssuesTask)
+                {
+                    _calendarItems.AddRange(allIssuesTask.Result.Select(i => new CalendarItem
+                    {
+                        Start = i.DueDate.AddHours(22),
+                        End = i.DueDate.AddDays(1).AddTicks(-1),
+                        Text = i.Title
+                    }));
                 }
                 else if (completedTask == groupsTask)
                 {
@@ -221,6 +236,12 @@
         {
             newIssueDto = await IssueService.CreateIssueAsync(newIssueDto);
             _issues?.Add(newIssueDto);
+            _calendarItems.Add(new CalendarItem
+            {
+                Start = newIssueDto.DueDate.AddHours(22),
+                End = newIssueDto.DueDate.AddDays(1).AddTicks(-1),
+                Text = newIssueDto.Title
+            });
             Snackbar.Add("Issue created successfully", Severity.Success);
         }
     }

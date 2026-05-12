@@ -11,6 +11,11 @@ public static class WorkLogEndpoints
 {
     public static void MapWorkLogEndpoints(this IEndpointRouteBuilder app)
     {
+        var userWorkLogGroup = app.MapGroup("/api/worklogs")
+            .RequireAuthorization(policy => policy.RequireRole(Roles.AppUser));
+
+        userWorkLogGroup.MapGet("/", GetAllUserWorkLogs);
+
         var workLogGroup = app.MapGroup("/api/issues/{issueId:guid}/worklogs")
             .RequireAuthorization(policy => policy.RequireRole(Roles.AppUser));
 
@@ -20,6 +25,33 @@ public static class WorkLogEndpoints
         workLogGroup.MapPost("/", CreateWorkLog);
         workLogGroup.MapPut("/{workLogId:guid}", UpdateWorkLog);
         workLogGroup.MapDelete("/{workLogId:guid}", DeleteWorkLog);
+    }
+
+    public static async Task<IResult> GetAllUserWorkLogs(ApplicationDbContext db, ClaimsPrincipal user)
+    {
+        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (userId is null)
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        var workLogs = await db.WorkLogs
+            .Where(w => w.UserId == userId)
+            .OrderByDescending(w => w.DateOfLogging)
+            .Select(w => new WorkLogDto
+            {
+                Id = w.Id,
+                Description = w.Description,
+                TimeSpentSeconds = w.TimeSpentSeconds,
+                DateOfLogging = w.DateOfLogging,
+                IsOwner = true,
+                CreatedAt = w.CreatedAt,
+                UpdatedAt = w.UpdatedAt
+            })
+            .ToListAsync();
+
+        return TypedResults.Ok(workLogs);
     }
 
     public static async Task<IResult> GetAllWorkLogs(Guid issueId, ApplicationDbContext db, ClaimsPrincipal user)

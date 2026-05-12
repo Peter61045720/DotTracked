@@ -1,16 +1,75 @@
 ﻿@page "/analytics/reports"
+@using DotTracked.Client.Components
 @using DotTracked.Client.Layout
+@using DotTracked.Client.Services
 @using DotTracked.Shared.Constants
+@using DotTracked.Shared.DTOs
+@using Heron.MudCalendar
+@using Heron.MudTotalCalendar
 @using Microsoft.AspNetCore.Authorization
 
 @attribute [Authorize(Roles = Roles.AppUser)]
 
 @layout AnalyticsLayout
 
+@inject IWorkLogService WorkLogService
+
 <MudContainer>
-    <MudText>Reports page works!</MudText>
+    <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-2">Work Hours Summary</MudText>
+
+    @if (_workLogs == null)
+    {
+        <CenteredSpinner/>
+    }
+    else if (_workLogs.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">No Worklogs available</MudAlert>
+    }
+    else
+    {
+        <MudTotalCalendar T="CalendarItem" Values="_workLogsTotals"/>
+    }
 </MudContainer>
 
 @code {
+    private List<WorkLogDto>? _workLogs;
+    private List<Value> _workLogsTotals = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _workLogs = await WorkLogService.GetUserWorkLogsAsync();
+
+        if (_workLogs is not null)
+        {
+            _workLogsTotals = BuildTotals();
+        }
+    }
+
+    private List<Value> BuildTotals()
+    {
+        var workHoursDefinition = new ValueDefinition
+        {
+            Name = "Worked",
+            Units = "h",
+            FormatString = "N2",
+            Style = "background-color: #2196f3; color: #ffffff;"
+        };
+
+        return _workLogs!
+            .GroupBy(w => w.DateOfLogging.Date)
+            .Select(g =>
+            {
+                var totalSecondsForDay = g.Sum(w => w.TimeSpentSeconds);
+                var totalHoursForDay = (double)totalSecondsForDay / 3600;
+
+                return new Value
+                {
+                    Amount = totalHoursForDay,
+                    Date = g.Key,
+                    Definition = workHoursDefinition
+                };
+            })
+            .ToList();
+    }
 
 }
