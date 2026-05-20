@@ -1,16 +1,118 @@
 ﻿@page "/analytics/timeline"
+@using ApexCharts
+@using DotTracked.Client.Components
 @using DotTracked.Client.Layout
+@using DotTracked.Client.Services
 @using DotTracked.Shared.Constants
+@using DotTracked.Shared.DTOs
 @using Microsoft.AspNetCore.Authorization
+@using Align = MudBlazor.Align
+@using Color = MudBlazor.Color
 
 @attribute [Authorize(Roles = Roles.AppUser)]
 
 @layout AnalyticsLayout
 
+@inject IGroupService GroupService
+@inject IIssueService IssueService
+
 <MudContainer>
-    <MudText>Timeline page works!</MudText>
+    <MudStack AlignItems="AlignItems.Center">
+        <div style="width: 40%;">
+            <MudText Typo="Typo.h5" Align="Align.Center">Gantt Chart</MudText>
+
+            <MudStack Row AlignItems="AlignItems.Center" Class="my-4">
+                <MudButton OnClick="GetPersonalIssues" Color="Color.Primary" Variant="Variant.Outlined">View Personal Issues</MudButton>
+
+                @if (_groups == null)
+                {
+                    <CenteredSpinner/>
+                }
+                else if (_groups.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info">No Groups available</MudAlert>
+                }
+                else
+                {
+                    <MudSelect T="GroupDto" Value="_selectedGroup" ValueChanged="OnGroupChanged" Label="Group" Placeholder="Select a Group" Variant="Variant.Outlined">
+                        @foreach (var group in _groups)
+                        {
+                            <MudSelectItem Value="group">@group.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+            </MudStack>
+        </div>
+    </MudStack>
+
+    @if (_selectedGroup == null && _issues == null)
+    {
+        <MudAlert Severity="Severity.Info">Please select a Group or query personal Issues</MudAlert>
+    }
+    else
+    {
+        @if (_issues == null)
+        {
+            <CenteredSpinner/>
+        }
+        else if (_issues.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info">No Issues available</MudAlert>
+        }
+        else
+        {
+            <MudPaper Class="pa-4">
+                <ApexChart TItem="IssueDto" Title="Issues Timeline" Options="_options" XAxisType="XAxisType.Datetime">
+                    <ApexRangeSeries TItem="IssueDto"
+                                     Items="_issues"
+                                     XValue="@(i => i.Title)"
+                                     YMinValue="@(i => i.StartDate.ToUnixTimeMilliseconds())"
+                                     YMaxValue="@(i => i.DueDate.AddHours(23).AddMinutes(59).ToUnixTimeMilliseconds())"/>
+                </ApexChart>
+            </MudPaper>
+        }
+    }
 </MudContainer>
 
 @code {
+    private List<GroupDto>? _groups;
+    private List<IssueDto>? _issues;
+    private GroupDto? _selectedGroup;
+    private ApexChartOptions<IssueDto> _options = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _options = new ApexChartOptions<IssueDto>
+        {
+            PlotOptions = new PlotOptions
+            {
+                Bar = new PlotOptionsBar { Horizontal = true }
+            },
+            Tooltip = new Tooltip
+            {
+                X = new TooltipX { Format = "yyyy-MM-dd" }
+            }
+        };
+
+        _groups = await GroupService.GetGroupsAsync();
+    }
+
+    public async Task GetPersonalIssues()
+    {
+        _issues = null;
+        _selectedGroup = null;
+        _issues = await IssueService.GetIssuesAsync();
+    }
+
+    public async Task OnGroupChanged(GroupDto? groupDto)
+    {
+        _selectedGroup = groupDto;
+        _issues = null;
+
+        if (_selectedGroup is not null)
+        {
+            _issues = await GroupService.GetGroupIssuesAsync(_selectedGroup.Id);
+        }
+    }
 
 }

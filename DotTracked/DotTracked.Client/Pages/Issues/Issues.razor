@@ -2,6 +2,7 @@
 @using DotTracked.Client.Components
 @using DotTracked.Client.Components.Dialogs
 @using DotTracked.Client.Components.Dialogs.Issues
+@using DotTracked.Client.Constants
 @using DotTracked.Client.Services
 @using DotTracked.Shared.Constants
 @using DotTracked.Shared.DTOs
@@ -35,8 +36,9 @@
             <Columns>
                 <PropertyColumn Property="i => i.Title" Title="Title"/>
                 <PropertyColumn Property="i => i.Description" Title="Description"/>
-                <PropertyColumn Property="i => i.Priority.ToString()" Title="Priority"/>
-                <PropertyColumn Property="i => i.Status.ToString()" Title="Status"/>
+                <PropertyColumn Property="i => i.Priority" Title="Priority"/>
+                <PropertyColumn Property="i => i.Status" Title="Status"/>
+                <PropertyColumn Property="i => DateOnly.FromDateTime(i.StartDate)" Title="Start Date"/>
                 <PropertyColumn Property="i => DateOnly.FromDateTime(i.DueDate)" Title="Due Date"/>
                 <TemplateColumn>
                     <CellTemplate>
@@ -66,15 +68,7 @@
 
     public async Task CreateIssueAsync()
     {
-        var options = new DialogOptions
-        {
-            MaxWidth = MaxWidth.Medium,
-            CloseButton = true,
-            BackdropClick = false,
-            CloseOnEscapeKey = true
-        };
-
-        var dialog = await DialogService.ShowAsync<CreateIssueDialog>("Create Issue", options);
+        var dialog = await DialogService.ShowAsync<CreateIssueDialog>("Create Issue", DialogSettings.Small);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is IssueDto newIssueDto)
@@ -92,15 +86,7 @@
             { x => x.IssueDto, issueDto }
         };
 
-        var options = new DialogOptions
-        {
-            MaxWidth = MaxWidth.Medium,
-            CloseButton = true,
-            BackdropClick = false,
-            CloseOnEscapeKey = true
-        };
-
-        var dialog = await DialogService.ShowAsync<UpdateIssueDialog>("Update Issue", parameters, options);
+        var dialog = await DialogService.ShowAsync<UpdateIssueDialog>("Update Issue", parameters, DialogSettings.Small);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is IssueDto updatedIssueDto)
@@ -118,15 +104,7 @@
             { x => x.ItemName, issueDto.Title }
         };
 
-        var options = new DialogOptions
-        {
-            MaxWidth = MaxWidth.ExtraSmall,
-            CloseButton = true,
-            BackdropClick = false,
-            CloseOnEscapeKey = true
-        };
-
-        var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Delete Issue", parameters, options);
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Delete Issue", parameters, DialogSettings.ExtraSmall);
         var result = await dialog.Result;
 
         if (!result.Canceled)

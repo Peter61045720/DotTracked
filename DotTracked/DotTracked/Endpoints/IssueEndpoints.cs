@@ -30,7 +30,9 @@ public static class IssueEndpoints
                     Description = issue.Description,
                     Priority = issue.Priority,
                     Status = issue.Status,
-                    DueDate = issue.DueDate
+                    StartDate = issue.StartDate,
+                    DueDate = issue.DueDate,
+                    EstimatedSeconds = issue.EstimatedSeconds
                 })
                 .ToListAsync();
 
@@ -59,7 +61,9 @@ public static class IssueEndpoints
                     Description = i.Description,
                     Priority = i.Priority,
                     Status = i.Status,
-                    DueDate = i.DueDate
+                    StartDate = i.StartDate,
+                    DueDate = i.DueDate,
+                    EstimatedSeconds = i.EstimatedSeconds
                 })
                 .ToListAsync();
 
@@ -94,7 +98,9 @@ public static class IssueEndpoints
                 Description = issue.Description,
                 Priority = issue.Priority,
                 Status = issue.Status,
-                DueDate = issue.DueDate
+                StartDate = issue.StartDate,
+                DueDate = issue.DueDate,
+                EstimatedSeconds = issue.EstimatedSeconds
             });
         });
 
@@ -113,7 +119,9 @@ public static class IssueEndpoints
                 Description = issueDto.Description,
                 Priority = issueDto.Priority,
                 Status = issueDto.Status,
+                StartDate = issueDto.StartDate,
                 DueDate = issueDto.DueDate,
+                EstimatedSeconds = issueDto.EstimatedSeconds,
                 CreatorId = userId
             };
 
@@ -155,7 +163,9 @@ public static class IssueEndpoints
                 issue.Description = issueDto.Description;
                 issue.Priority = issueDto.Priority;
                 issue.Status = issueDto.Status;
+                issue.StartDate = issueDto.StartDate;
                 issue.DueDate = issueDto.DueDate;
+                issue.EstimatedSeconds = issueDto.EstimatedSeconds;
                 issue.UpdatedAt = DateTime.UtcNow;
 
                 await db.SaveChangesAsync();

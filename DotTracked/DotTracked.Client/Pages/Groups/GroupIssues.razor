@@ -1,6 +1,7 @@
 ﻿@page "/groups/{groupId:guid}/issues"
 @using DotTracked.Client.Components
 @using DotTracked.Client.Components.Dialogs.Issues
+@using DotTracked.Client.Constants
 @using DotTracked.Client.Services
 @using DotTracked.Shared.Constants
 @using DotTracked.Shared.DTOs
@@ -47,6 +48,7 @@
                 <PropertyColumn Property="i => i.Description" Title="Description"/>
                 <PropertyColumn Property="i => i.Priority" Title="Priority"/>
                 <PropertyColumn Property="i => i.Status" Title="Status"/>
+                <PropertyColumn Property="i => DateOnly.FromDateTime(i.StartDate)" Title="Start Date"/>
                 <PropertyColumn Property="i => DateOnly.FromDateTime(i.DueDate)" Title="Due Date"/>
                 <TemplateColumn>
                     <CellTemplate>
@@ -80,15 +82,7 @@
 
     public async Task CreateIssueAsync()
     {
-        var options = new DialogOptions
-        {
-            MaxWidth = MaxWidth.Medium,
-            CloseButton = true,
-            BackdropClick = false,
-            CloseOnEscapeKey = true
-        };
-
-        var dialog = await DialogService.ShowAsync<CreateIssueDialog>("Create Group Issue", options);
+        var dialog = await DialogService.ShowAsync<CreateIssueDialog>("Create Group Issue", DialogSettings.Small);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is IssueDto newIssueDto)

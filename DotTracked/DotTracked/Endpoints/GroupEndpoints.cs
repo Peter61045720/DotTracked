@@ -444,7 +444,9 @@ public static class GroupEndpoints
                 Description = i.Description,
                 Priority = i.Priority,
                 Status = i.Status,
-                DueDate = i.DueDate
+                StartDate = i.StartDate,
+                DueDate = i.DueDate,
+                EstimatedSeconds = i.EstimatedSeconds
             })
             .ToListAsync();
 
@@ -491,7 +493,9 @@ public static class GroupEndpoints
             Description = issue.Description,
             Priority = issue.Priority,
             Status = issue.Status,
-            DueDate = issue.DueDate
+            StartDate = issue.StartDate,
+            DueDate = issue.DueDate,
+            EstimatedSeconds = issue.EstimatedSeconds
         });
     }
 
@@ -522,7 +526,9 @@ public static class GroupEndpoints
             Description = issueDto.Description,
             Priority = issueDto.Priority,
             Status = issueDto.Status,
+            StartDate = issueDto.StartDate,
             DueDate = issueDto.DueDate,
+            EstimatedSeconds = issueDto.EstimatedSeconds,
             CreatorId = userId,
             GroupId = groupId
         };
@@ -572,7 +578,9 @@ public static class GroupEndpoints
         issue.Description = issueDto.Description;
         issue.Priority = issueDto.Priority;
         issue.Status = issueDto.Status;
+        issue.StartDate = issueDto.StartDate;
         issue.DueDate = issueDto.DueDate;
+        issue.EstimatedSeconds = issueDto.EstimatedSeconds;
         issue.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();

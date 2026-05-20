@@ -1,57 +1,90 @@
-﻿@using DotTracked.Shared.DTOs
+﻿@using System.ComponentModel.DataAnnotations
+@using DotTracked.Shared.DTOs
 @using DotTracked.Shared.Enums
 @inject ISnackbar Snackbar
 
-<EditForm Model="@_issueDto" OnValidSubmit="CreateIssue">
-    <DataAnnotationsValidator/>
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add Issue</MudText>
+    </TitleContent>
 
-    <MudDialog>
-        <TitleContent>
-            <MudText Typo="Typo.h6">Add Issue</MudText>
-        </TitleContent>
+    <DialogContent>
+        <EditForm Model="@_input" OnValidSubmit="CreateIssue" id="editForm">
+            <DataAnnotationsValidator/>
 
-        <DialogContent>
-            <MudTextField @bind-Value="_issueDto.Title" For="@(() => _issueDto.Title)"
-                          Label="Title" Immediate="true"/>
+            <MudGrid Spacing="4">
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_input.Title" For="@(() => _input.Title)"
+                                  Label="Title" Immediate="true"/>
+                </MudItem>
 
-            <MudTextField @bind-Value="_issueDto.Description" For="@(() => _issueDto.Description)"
-                          Label="Description" Lines="6" Immediate="true"/>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_input.Description" For="@(() => _input.Description)"
+                                  Label="Description" Lines="6" Immediate="true"/>
+                </MudItem>
 
-            <MudSelect @bind-Value="_issueDto.Priority" Label="Priority">
-                @foreach (var priority in Enum.GetValues<Priority>())
-                {
-                    <MudSelectItem Value="@priority">@priority.ToString()</MudSelectItem>
-                }
-            </MudSelect>
+                <MudItem xs="6">
+                    <MudSelect @bind-Value="_input.Priority" Label="Priority">
+                        @foreach (var priority in Enum.GetValues<Priority>())
+                        {
+                            <MudSelectItem Value="@priority">@priority.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudSelect @bind-Value="_input.Status" Label="Status">
+                        @foreach (var status in Enum.GetValues<Status>())
+                        {
+                            <MudSelectItem Value="@status">@status.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
 
-            <MudSelect @bind-Value="_issueDto.Status" Label="Status">
-                @foreach (var status in Enum.GetValues<Status>())
-                {
-                    <MudSelectItem Value="@status">@status.ToString()</MudSelectItem>
-                }
-            </MudSelect>
+                <MudItem xs="12">
+                    <MudDateRangePicker @bind-DateRange="DateRange" PlaceholderStart="Start Date" PlaceholderEnd="Due Date"
+                                        PickerVariant="PickerVariant.Dialog" Clearable="true"/>
+                </MudItem>
 
-            <MudDatePicker @bind-Date="PickerDate" Label="Due Date" ShowToolbar="false"/>
-        </DialogContent>
+                <MudItem xs="4">
+                    <MudNumericField @bind-Value="_input.Hours" For="@(() => _input.Hours)"
+                                     Label="Hours" Min="0" Max="672"/>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudNumericField @bind-Value="_input.Minutes" For="@(() => _input.Minutes)"
+                                     Label="Minutes" Min="0" Max="59"/>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudNumericField @bind-Value="_input.Seconds" For="@(() => _input.Seconds)"
+                                     Label="Seconds" Min="0" Max="59"/>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
 
-        <DialogActions>
-            <MudButton OnClick="Cancel">Cancel</MudButton>
-            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled">Create</MudButton>
-        </DialogActions>
-    </MudDialog>
-</EditForm>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" form="editForm" Color="Color.Primary" Variant="Variant.Filled">Create</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; }
 
-    private readonly IssueDto _issueDto = new() { DueDate = DateTime.UtcNow };
+    private readonly InputModel _input = new();
 
-    private DateTime? PickerDate
+    private DateRange _dateRange = new();
+
+    public DateRange DateRange
     {
-        get => _issueDto.DueDate;
-        set => _issueDto.DueDate = value ?? DateTime.UtcNow;
+        get => _dateRange;
+        set
+        {
+            _dateRange = value;
+            _input.StartDate = value?.Start;
+            _input.DueDate = value?.End;
+        }
     }
 
     private void Cancel()
@@ -61,7 +94,59 @@
 
     private void CreateIssue()
     {
-        MudDialog.Close(DialogResult.Ok(_issueDto));
+        if (_input.StartDate is null || _input.DueDate is null)
+        {
+            Snackbar.Add("Please select a date range", Severity.Error);
+            return;
+        }
+
+        var issueDto = new IssueDto
+        {
+            Title = _input.Title,
+            Description = _input.Description,
+            Priority = _input.Priority,
+            Status = _input.Status,
+            StartDate = _input.StartDate.Value.Date,
+            DueDate = _input.DueDate.Value.Date,
+            EstimatedSeconds = _input.Hours * 3600 + _input.Minutes * 60 + _input.Seconds
+        };
+
+        MudDialog.Close(DialogResult.Ok(issueDto));
+    }
+
+    public class InputModel
+    {
+        [Required]
+        [StringLength(150, ErrorMessage = "Title length can't be more than 150 characters.")]
+        public string Title { get; set; }
+
+        [Required]
+        [StringLength(400, ErrorMessage = "Description length can't be more than 400 characters.")]
+        public string Description { get; set; }
+
+        [Required]
+        public Priority Priority { get; set; }
+
+        [Required]
+        public Status Status { get; set; }
+
+        [Required(ErrorMessage = "You must select a start date")]
+        public DateTime? StartDate { get; set; }
+
+        [Required(ErrorMessage = "You must select a due date")]
+        public DateTime? DueDate { get; set; }
+
+        [Required]
+        [Range(0, 672, ErrorMessage = "Hours must be between 0 and 672 (4 weeks)")]
+        public int Hours { get; set; }
+
+        [Required]
+        [Range(0, 59, ErrorMessage = "Minutes must be between 0 and 59")]
+        public int Minutes { get; set; }
+
+        [Required]
+        [Range(0, 59, ErrorMessage = "Seconds must be between 0 and 59")]
+        public int Seconds { get; set; }
     }
 
 }
